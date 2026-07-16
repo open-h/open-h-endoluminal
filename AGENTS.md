@@ -8,7 +8,7 @@ Open-H-Endoluminal is an open, multi-institution dataset initiative for endoscop
 
 | Path | Purpose |
 | :--- | :--- |
-| `README.md` | Contribution guide: scope, task hierarchy, signal tiers, format requirements, submission funnel. |
+| `README.md` | Contribution guide: scope, task hierarchy, format requirements, submission funnel; links to the RFP for signal tiers, collection settings, and required metadata. |
 | `open-h-endoluminal-rfp.md` | RFP working draft, kept verbatim. DO NOT EDIT (see note below). |
 | `templates/dataset_template.md` | Dataset README template; contributors complete a copy as `meta/README.md` inside their dataset. |
 | `scripts/conversion/README.md` | Overview of the converters plus video-encoding performance tuning notes. |

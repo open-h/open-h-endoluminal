@@ -29,6 +29,8 @@ match your own capture format):
     ├── camera_pose           (Dataset): Absolute camera (scope-tip) pose per step,
     │                         [x, y, z, qx, qy, qz, qw] in any fixed world frame,
     │                         with the tip-to-camera calibration already applied.
+    │                         Translations must be in METERS; convert
+    │                         millimeter sources to meters first.
     └── timestep              (Dataset): Timestamps for each data point.
 
 The camera_pose stream feeds the 'observation.meta.camera_frame_delta_pose'
@@ -71,7 +73,10 @@ def absolute_poses_to_camera_frame_deltas(poses):
 
     Args:
         poses: (N, 7) array of absolute camera poses [x, y, z, qx, qy, qz, qw]
-            in any fixed world frame. Apply your tip-to-camera (hand-eye) or
+            in any fixed world frame. Translations must be in METERS; convert
+            millimeter sources (e.g., an EM tracker reporting millimeters) to
+            meters first, since the output delta names dx_m/dy_m/dz_m are
+            defined in meters. Apply your tip-to-camera (hand-eye) or
             sensor-to-camera calibration first, so the poses describe the
             camera itself, not the tracking sensor or the tip body frame.
 

@@ -175,7 +175,7 @@ To accommodate additional endoluminal-specific data that is helpful to downstrea
 
 #### Camera-Frame Kinematics for RGB Endoscopy
 
-If your primary video stream is RGB endoscopic video, you **must make a best effort** to also provide kinematics in the reference frame of your endoscope camera. This is requested to best support multi-embodiment task transfer between embodiments that may have very different native kinematics (i.e. propriertary cable-driver actuator values).
+If your primary video stream is RGB endoscopic video, you **must make a best effort** to also provide kinematics in the reference frame of your endoscope camera. This is requested to best support multi-embodiment task transfer between embodiments that may have very different native kinematics (e.g. proprietary cable-driven actuator values).
 
 * **observation.meta.camera_frame_delta_pose**: `[dx_m, dy_m, dz_m, dqx, dqy, dqz, dqw]`, the relative pose of the camera from the previous frame to the current frame, expressed in the previous frame's optical coordinates (OpenCV convention: +x right, +y down, +z along the optical axis). The first frame of each episode is the identity transform `[0, 0, 0, 0, 0, 0, 1]`.
 

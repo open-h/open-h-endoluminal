@@ -29,7 +29,11 @@ Worked example (endoscope camera vs. EM tracker):
 
 How It Works:
 -------------
-- Fits both y1 and y2 to sine wave models of the form A·sin(ω·t + φ).
+- Fits both y1 and y2 to sine wave models of the form A·sin(ω·t + φ) + C,
+  where C is a constant offset term, so signals with a large nonzero mean
+  (e.g., a pixel coordinate oscillating around the image center, or an EM
+  translation norm of hundreds of millimeters with a small wiggle) do not
+  need to be de-meaned before fitting.
 - Estimates the phase difference between the fitted sine waves.
 - Converts phase difference to time offset using: Δt = Δφ / ω.
 - Returns both the principal solution and its phase-shifted alternative.
@@ -78,23 +82,26 @@ def estimate_offset(t1, y1, t2, y2, w0, a1=1, a2=1):
         offset by half a period (π/w) from the first solution.
     Notes:
     ------
-    - The function fits both signals to sine curves using non-linear least squares.
+    - The function fits both signals to sine curves with a constant offset
+      term, A * sin(w * t + phi) + C, using non-linear least squares.
+    - The offset term C absorbs any nonzero signal mean, so the inputs do
+      not need to be de-meaned beforehand.
     - It computes the phase difference between the two fitted curves.
     - The temporal offset is inferred from the phase difference: Δt = Δφ / ω.
     - Since sine waves are periodic, two plausible offsets are returned.
     '''
-    # --- Define sine model to be fitted: A * sin(w * t + φ) ---
-    def sine_model(t, A, w, phi):
-        return A * np.sin(w * t + phi)
-    
+    # --- Define sine model to be fitted: A * sin(w * t + φ) + C ---
+    def sine_model(t, A, w, phi, C):
+        return A * np.sin(w * t + phi) + C
+
     # --- Fit the first signal ---
     t0 = t1[0] # Shift time origin for numerical stability
-    params1, _ = curve_fit(sine_model, t1-t0, y1, p0=[a1, w0, 0])
-    A1, w1, phi1 = params1
+    params1, _ = curve_fit(sine_model, t1-t0, y1, p0=[a1, w0, 0, np.mean(y1)])
+    A1, w1, phi1, C1 = params1
 
     # --- Fit the second signal ---
-    params2, _ = curve_fit(sine_model, t2-t0, y2, p0=[a2, w0, 0])
-    A2, w2, phi2 = params2
+    params2, _ = curve_fit(sine_model, t2-t0, y2, p0=[a2, w0, 0, np.mean(y2)])
+    A2, w2, phi2, C2 = params2
 
     # --- Estimate time offset from phase difference ---
     # Δφ = w * Δt  => Δt = Δφ / w

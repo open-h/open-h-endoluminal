@@ -246,6 +246,28 @@ observation.state: [ins_depth, shaft_rot, bend_ud, bend_lr, tip_x, tip_y, tip_z,
 - tip_x..tip_qw: tip pose in the EM field-generator frame (mm, unit quaternion)
 ```
 
+### Camera-Frame Kinematics (REQUIRED best effort for RGB endoscopy)
+
+*In endoluminal robotics the chip-on-tip camera is the end effector, so camera-frame motion is the equivalent of the camera-frame end-effector pose used by rigid-arm datasets such as Open-X Embodiment. Provide the feature `observation.meta.camera_frame_delta_pose = [dx_m, dy_m, dz_m, dqx, dqy, dqz, dqw]`: the relative pose of the camera from the previous frame to the current frame, expressed in the previous frame's optical coordinates (OpenCV convention: +x right, +y down, +z along the optical axis). The first frame of each episode is the identity `[0, 0, 0, 0, 0, 0, 1]`. This is a best-effort requirement for RGB endoscopy submissions; fluoroscopy-only datasets are exempt. A reference implementation is provided as `absolute_poses_to_camera_frame_deltas()` in `scripts/conversion/hdf5_to_lerobot.py` in the contribution guide repository.*
+
+**Camera-frame kinematics provided?**
+- [ ] **Yes**, as `observation.meta.camera_frame_delta_pose`
+- [ ] **No** (justify below why it was infeasible)
+
+**Derivation method:**
+- [ ] **From native kinematics (S1)** (forward kinematics plus tip-to-camera hand-eye calibration)
+- [ ] **From tracked pose (S2)** (EM or shape-sensing pose plus sensor-to-camera calibration)
+- [ ] **From inferred pose (S3)** (monocular or stereo SLAM / visual odometry ego-motion)
+- [ ] **Other / not provided** (Please specify: `[Your Method]`)
+
+**Scale:**
+- [ ] **Metric (meters)**
+- [ ] **Normalized / up-to-scale** (state the normalization; typical for monocular SLAM)
+
+*Describe where the supporting calibration lives in the dataset and any known error characteristics:* `[e.g., meta/calibration/hand_eye.json contains the tip-to-camera transform; translation error is below 2 mm RMS against EM tracking on bench-top trajectories]`
+
+*If camera-frame kinematics are not provided, justify why deriving them was infeasible:* `[e.g., hand-held clinical scope with no kinematic or pose sensing, and monocular visual odometry failed on the majority of frames due to red-out and specular reflections]`
+
 ### Calibration & Kinematic Descriptions (REQUIRED where a robot is involved)
 
 - [ ] **Calibration data provided** (e.g., camera intrinsics and extrinsics, EM-to-camera or hand-eye transforms)

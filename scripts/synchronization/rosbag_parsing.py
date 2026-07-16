@@ -47,7 +47,6 @@ Dependencies:
 
 import rosbag
 import pickle
-from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import numpy as np
 
@@ -113,7 +112,8 @@ def parse_bag(bag_file_path, topics_of_interest, output_pkl_path):
         data_dict[t_key].append(t.to_sec())
 
         # Handle message parsing depending on type/topic
-        if isinstance(msg, Image):
+        # isinstance(msg, sensor_msgs.msg.Image) is always False for rosbag messages (rosbag deserializes into dynamically generated genpy classes), so route on the message type string instead.
+        if getattr(msg, "_type", "") == "sensor_msgs/Image":
             data = image_to_float(bridge, msg)
         elif topic == "/em_tracker/tip_pose":
             data = pose_to_float(msg)

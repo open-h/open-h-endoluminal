@@ -128,6 +128,11 @@ def main(
                     "bend_left_right_setpoint",
                 ],
             },
+            # If you also record absolute camera poses, convert them into the
+            # "observation.meta.camera_frame_delta_pose" feature (REQUIRED best
+            # effort for RGB endoscopy); see absolute_poses_to_camera_frame_deltas()
+            # in hdf5_to_lerobot.py and the README section "Camera-Frame
+            # Kinematics for RGB Endoscopy".
         },
         image_writer_processes=16,
         image_writer_threads=20,

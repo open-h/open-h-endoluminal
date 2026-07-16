@@ -1,4 +1,4 @@
-<!-- Working draft. Replace this file's contents with the finalized RFP when it lands. Source of truth during drafting: the shared Google Doc / Nigel's vault copy. -->
+<!-- Working draft, kept verbatim. Do not edit; this file will be replaced by the finalized RFP when it lands. -->
 
 # Request for Proposals (RFP)
 

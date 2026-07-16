@@ -806,33 +806,41 @@ class OpenHEndoluminalValidator:
         # Best-effort camera-frame kinematics for RGB endoscopy submissions.
         # The chip-on-tip camera is the end effector, so camera-frame motion is
         # the endoluminal equivalent of the camera-frame end-effector pose used
-        # by rigid-arm datasets.
-        endoscope_streams = [
+        # by rigid-arm datasets. Every observation.images.* key counts as an
+        # RGB camera stream unless its name marks it as fluoroscopy, so generic
+        # keys (observation.images.rgb, observation.images.cam0,
+        # observation.images.main) also trigger the check; fluoroscopy-only
+        # submissions are exempt and simply have no qualifying streams.
+        fluoroscopy_markers = ("fluoro", "xray", "x_ray", "x-ray")
+        rgb_camera_streams = [
             k
             for k in features
-            if k.startswith(self.RECOMMENDED_IMAGE_PREFIX) and "scope" in k.lower()
+            if k.startswith(self.RECOMMENDED_IMAGE_PREFIX)
+            and not any(marker in k.lower() for marker in fluoroscopy_markers)
         ]
         has_camera_frame_kinematics = any(
             "camera_frame" in k.lower() and "pose" in k.lower() for k in features
         )
-        if endoscope_streams:
+        if rgb_camera_streams:
             if has_camera_frame_kinematics:
                 self.add_result(
                     ValidationLevel.SUCCESS,
                     category,
-                    "Camera-frame kinematics present for the RGB endoscopy stream",
+                    "Camera-frame kinematics present for the RGB camera stream(s)",
                 )
             else:
                 self.add_result(
                     ValidationLevel.WARNING,
                     category,
-                    "RGB endoscopy stream present but no camera-frame kinematics "
-                    "feature found",
-                    "RGB endoscopy submissions must make a best effort to provide "
-                    "kinematics as camera-frame motion under "
+                    "RGB camera stream(s) present "
+                    f"({', '.join(rgb_camera_streams[:3])}) but no camera-frame "
+                    "kinematics feature found",
+                    "Submissions with an RGB camera stream must make a best "
+                    "effort to provide kinematics as camera-frame motion under "
                     "'observation.meta.camera_frame_delta_pose' (per-step relative "
                     "camera pose expressed in the previous frame's optical "
-                    "coordinates); if infeasible, justify it in meta/README.md",
+                    "coordinates); fluoroscopy-only submissions are exempt. If "
+                    "infeasible, justify it in meta/README.md",
                 )
 
     def _validate_image_feature(self, feature_name: str, feature_info: Dict):
@@ -1303,10 +1311,18 @@ class OpenHEndoluminalValidator:
             return
 
         files_checked = 0
+        # episodes_attempted counts every episode (or file treated as one
+        # episode) that was examined, including those that fail early;
+        # episodes_checked counts only those that passed the preliminary
+        # column/dtype/finiteness checks and ran the full timestamp suite.
+        episodes_attempted = 0
         episodes_checked = 0
         episodes_with_errors = 0
         episodes_with_warnings = 0
         issue_summary = {
+            "missing_timestamp_column": [],
+            "non_numeric_dtype": [],
+            "non_finite_values": [],
             "epoch_timestamps": [],
             "constant_timestamps": [],
             "low_uniqueness": [],
@@ -1327,16 +1343,21 @@ class OpenHEndoluminalValidator:
                 )
                 continue
 
+            files_checked += 1
+
             if "timestamp" not in df.columns:
                 self.add_result(
                     ValidationLevel.ERROR,
                     category,
                     f"{pf.name}: missing 'timestamp' column",
                 )
+                issue_summary["missing_timestamp_column"].append(pf.name)
+                # Without a timestamp column the file's episodes cannot be
+                # checked individually, so the whole file counts as a single
+                # examined unit.
+                episodes_attempted += 1
                 episodes_with_errors += 1
                 continue
-
-            files_checked += 1
 
             # v3.0 data files aggregate multiple episodes per parquet;
             # group by episode_index so each episode is checked on its own.
@@ -1360,6 +1381,8 @@ class OpenHEndoluminalValidator:
                 else:
                     ep_name = f"{pf.name}[episode {ep_idx}]"
 
+                episodes_attempted += 1
+
                 ts_series = ep_df["timestamp"]
                 if not np.issubdtype(ts_series.dtype, np.number):
                     self.add_result(
@@ -1368,6 +1391,7 @@ class OpenHEndoluminalValidator:
                         f"{ep_name}: timestamp column has non-numeric dtype "
                         f"({ts_series.dtype})",
                     )
+                    issue_summary["non_numeric_dtype"].append(ep_name)
                     episodes_with_errors += 1
                     continue
 
@@ -1382,6 +1406,7 @@ class OpenHEndoluminalValidator:
                         f"{ep_name}: timestamp contains {non_finite_count} "
                         "NaN/Inf value(s)",
                     )
+                    issue_summary["non_finite_values"].append(ep_name)
                     episodes_with_errors += 1
                     continue
 
@@ -1539,20 +1564,35 @@ class OpenHEndoluminalValidator:
                     episodes_with_warnings += 1
 
         # --- Aggregate summary ---
-        if episodes_checked == 0:
+        if episodes_attempted == 0:
+            # Nothing was examined (e.g. no readable parquet files); any
+            # read failures were already reported above.
             return
 
         total_issues = episodes_with_errors + episodes_with_warnings
         if total_issues == 0:
-            self.add_result(
-                ValidationLevel.SUCCESS,
-                category,
-                f"All {episodes_checked} checked episodes have valid timestamps "
-                f"(monotonically increasing, unique per frame, relative to episode start)",
-            )
+            if episodes_checked > 0:
+                self.add_result(
+                    ValidationLevel.SUCCESS,
+                    category,
+                    f"All {episodes_checked} checked episodes have valid timestamps "
+                    f"(monotonically increasing, unique per frame, relative to episode start)",
+                )
         else:
             if episodes_with_errors > 0:
                 broken_types = []
+                if issue_summary["missing_timestamp_column"]:
+                    broken_types.append(
+                        f"{len(issue_summary['missing_timestamp_column'])} file(s) missing the timestamp column"
+                    )
+                if issue_summary["non_numeric_dtype"]:
+                    broken_types.append(
+                        f"{len(issue_summary['non_numeric_dtype'])} with a non-numeric timestamp dtype"
+                    )
+                if issue_summary["non_finite_values"]:
+                    broken_types.append(
+                        f"{len(issue_summary['non_finite_values'])} with NaN/Inf timestamp values"
+                    )
                 if issue_summary["epoch_timestamps"]:
                     broken_types.append(
                         f"{len(issue_summary['epoch_timestamps'])} with absolute epoch values"
@@ -1572,8 +1612,8 @@ class OpenHEndoluminalValidator:
                 self.add_result(
                     ValidationLevel.ERROR,
                     category,
-                    f"Timestamp issues found in {episodes_with_errors}/{episodes_checked} "
-                    f"checked episodes: {'; '.join(broken_types)}",
+                    f"Timestamp issues found in {episodes_with_errors}/{episodes_attempted} "
+                    f"examined episodes: {'; '.join(broken_types)}",
                     "Broken timestamps may cause downstream models "
                     "to always select the same video frame, "
                     "producing static/frozen training data. Fix the dataset's "
@@ -1599,15 +1639,16 @@ class OpenHEndoluminalValidator:
                     self.add_result(
                         ValidationLevel.WARNING,
                         category,
-                        f"Timestamp warnings in {episodes_with_warnings}/{episodes_checked} "
-                        f"checked episodes: {'; '.join(warn_types)}",
+                        f"Timestamp warnings in {episodes_with_warnings}/{episodes_attempted} "
+                        f"examined episodes: {'; '.join(warn_types)}",
                     )
 
         self.add_result(
             ValidationLevel.INFO,
             category,
-            f"Checked {episodes_checked} episode(s) across {files_checked} "
-            "data parquet file(s) for timestamp integrity.",
+            f"Examined {episodes_attempted} episode(s) across {files_checked} "
+            f"data parquet file(s) for timestamp integrity "
+            f"({episodes_checked} passed the preliminary timestamp checks).",
         )
 
     # ------------------------------------------------------------------
