@@ -42,14 +42,15 @@ In preference order: clinical (human), in-vivo (animal), ex-vivo (animal tissue)
 
 These names must be identical across the README, template, converters, and validator.
 
-- Required features: `action` and `observation.state`.
+- Required features: `action` and `observation.state`. `observation.state` holds the PRIMARY proprioception describing the robot/endoscope state (native kinematics where available; the tracked pose only on platforms where that is the sole proprioceptive signal). Additional pose streams are auxiliary and live under `observation.meta.<field>` (e.g., `observation.meta.em_pose`) — never concatenated into `observation.state`.
 - Camera streams: `observation.images.<view>` (endoluminal examples: `observation.images.endoscope`, `observation.images.fluoro`).
 - Per-frame metadata: `observation.meta.<field>` (endoluminal examples: `observation.meta.scope_type`, `observation.meta.em_pose` if auxiliary).
 - Camera-frame kinematics (REQUIRED best effort for RGB endoscopy): `observation.meta.camera_frame_delta_pose`, the per-step relative camera pose `[dx_m, dy_m, dz_m, dqx, dqy, dqz, dqw]` expressed in the previous frame's optical coordinates (first frame is the identity). The chip-on-tip camera is the end effector, so this is the endoluminal equivalent of the camera-frame end-effector pose used by rigid-arm datasets. Reference implementation: `absolute_poses_to_camera_frame_deltas()` in `scripts/conversion/hdf5_to_lerobot.py`. Fluoroscopy-only submissions are exempt.
 - Timestep-level language: `instruction.text`.
+- Ground-truth capture clocks: `observation.meta.host_stamp_ns` (int64, Unix-epoch nanoseconds, one per frame). LeRobot's canonical `timestamp` column is always the frame timeline (`frame_index / fps`; the library does not accept explicit per-frame timestamps), so raw hardware stamps are preserved losslessly in this pass-through feature. Streams must be captured or resampled at a fixed rate.
 - Actions are positional setpoints (target positions and angles), not velocities.
 - Quality bars (suggested): >= 20 Hz, >= 480p, MP4 video encoding, synchronization tolerance recorded via `tolerance_s` (typical 0.1 s).
-- Flexible-robot state conventions: insertion depth, shaft rotation, tip bend angles (up-down, left-right) or tendon displacements, and tip pose; catheters similar, with guidewire advance/retract and rotate.
+- Flexible-robot state conventions: insertion depth, shaft rotation, tip bend angles (up-down, left-right) or tendon displacements; catheters similar, with guidewire advance/retract and rotate. Tip pose appears in `observation.state` only when it is the primary proprioception (e.g., an S2-only platform with no native kinematics, like the README's catheter example); otherwise it is auxiliary under `observation.meta.em_pose`.
 
 ## Common Workflows
 

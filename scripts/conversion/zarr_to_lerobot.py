@@ -5,9 +5,8 @@ LeRobot dataset format v3.0.
 
 Version assumption:
 -------------------
-Requires the `lerobot` Python package v0.4.0 or later (`pip install "lerobot>=0.4.0"`).
-Note that the package version and the dataset format version are separate
-versioning schemes: lerobot >= 0.4.0 writes datasets in format v3.0.
+Requires the `lerobot` Python package pinned at 0.6.0 with the dataset extra
+(`pip install "lerobot[dataset]==0.6.0"`; Python >= 3.12).
 
 This script is designed to process a single Zarr store that contains an entire
 dataset, with episode boundaries defined by an `episode_ends` array. It extracts
@@ -42,7 +41,7 @@ To convert and then upload to the Hugging Face Hub:
 
 Dependencies:
 -------------
-- lerobot >= 0.4.0
+- lerobot[dataset] == 0.6.0
 - tyro
 - zarr
 - tqdm
@@ -51,12 +50,12 @@ Dependencies:
 import shutil
 from pathlib import Path
 
-import zarr
+import numpy as np
 import tqdm
 import tyro
-
+import zarr
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
-from lerobot.constants import HF_LEROBOT_HOME
+from lerobot.utils.constants import HF_LEROBOT_HOME
 
 
 def convert_data_to_lerobot(data_path: Path, repo_id: str, *, push_to_hub: bool = False):
@@ -116,6 +115,15 @@ def convert_data_to_lerobot(data_path: Path, repo_id: str, *, push_to_hub: bool 
             # effort for RGB endoscopy); see absolute_poses_to_camera_frame_deltas()
             # in hdf5_to_lerobot.py and the README section "Camera-Frame
             # Kinematics for RGB Endoscopy".
+            # Ground-truth capture clock, preserved losslessly. The canonical
+            # LeRobot `timestamp` column is always frame_index / fps, so the
+            # raw hardware stamps live in this pass-through feature: int64
+            # Unix-epoch nanoseconds, one per frame.
+            "observation.meta.host_stamp_ns": {
+                "dtype": "int64",
+                "shape": (1,),
+                "names": ["host_stamp_ns"],
+            },
         },
         image_writer_processes=16,
         image_writer_threads=20,
@@ -146,15 +154,30 @@ def convert_data_to_lerobot(data_path: Path, repo_id: str, *, push_to_hub: bool 
     for episode_idx in tqdm.tqdm(range(num_episodes), desc="Converting Episodes"):
         end_idx = episode_ends[episode_idx]
         try:
-            # Add each frame from the current episode slice to the dataset buffer.
+            # Convert the source capture clock to int64 epoch nanoseconds for
+            # observation.meta.host_stamp_ns (assumes `timestep` holds
+            # seconds; adapt if your store uses another unit).
+            episode_stamp_ns = np.round(
+                np.asarray(root_zarr["timestep"][start_idx:end_idx], dtype=np.float64) * 1e9
+            ).astype(np.int64)
+
+            # Add each frame from the current episode slice to the dataset
+            # buffer. lerobot >= 0.4 takes a single dict with the task string
+            # INSIDE it; the canonical `timestamp` column is synthesized as
+            # frame_index / fps.
             for step_idx in range(start_idx, end_idx):
+                # lerobot validates feature dtypes strictly: cast numeric
+                # sources to the declared float32 explicitly.
                 frame_data = {
                     "observation.images.endoscope": root_zarr["observations/rgb"][step_idx],
-                    "observation.state": root_zarr["scope_state"][step_idx],
-                    "action": root_zarr["action"][step_idx],
+                    "observation.state": np.asarray(
+                        root_zarr["scope_state"][step_idx], dtype=np.float32),
+                    "action": np.asarray(
+                        root_zarr["action"][step_idx], dtype=np.float32),
+                    "observation.meta.host_stamp_ns": episode_stamp_ns[step_idx - start_idx : step_idx - start_idx + 1],
+                    "task": task_description,
                 }
-                timestamp = root_zarr["timestep"][step_idx]
-                dataset.add_frame(frame_data, task=task_description, timestamp=timestamp)
+                dataset.add_frame(frame_data)
 
             # Save the buffered frames as a completed episode.
             dataset.save_episode()
@@ -167,6 +190,10 @@ def convert_data_to_lerobot(data_path: Path, repo_id: str, *, push_to_hub: bool 
             # Always advance to the next episode boundary, even if this
             # episode failed, so a failure never bleeds into the next slice.
             start_idx = end_idx
+
+    # REQUIRED: close the parquet writers. Without this the footer metadata
+    # is never written and the resulting dataset may not load at all.
+    dataset.finalize()
 
     print(f"Dataset conversion complete. Saved to {final_output_path}")
 

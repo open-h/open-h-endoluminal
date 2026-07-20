@@ -9,9 +9,8 @@ safety-critical endoluminal procedures.
 
 Version assumption:
 -------------------
-Requires the `lerobot` Python package v0.4.0 or later (`pip install "lerobot>=0.4.0"`).
-Note that the package version and the dataset format version are separate
-versioning schemes: lerobot >= 0.4.0 writes datasets in format v3.0.
+Requires the `lerobot` Python package pinned at 0.6.0 with the dataset extra
+(`pip install "lerobot[dataset]==0.6.0"`; Python >= 3.12).
 
 Expected Directory Layout:
 --------------------------
@@ -32,14 +31,14 @@ To also push to the Hub:
     python custom_lerobot_split.py --data-dir /path/to/your/data --repo-id your-username/your-dataset-name --push-to-hub
 """
 
+import json
 from pathlib import Path
 
 import h5py
+import numpy as np
 import tqdm
 import tyro
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
-from lerobot.datasets.utils import write_info
 
 
 def add_episodes_from_dir(dataset, data_dir: Path, task_description: str) -> int:
@@ -55,16 +54,25 @@ def add_episodes_from_dir(dataset, data_dir: Path, task_description: str) -> int
             root_name = "data/demo_0"
             num_steps = len(f[f"{root_name}/action"])
 
+            # lerobot >= 0.4 takes a single dict with the task string INSIDE
+            # it. The canonical `timestamp` column is synthesized as
+            # frame_index / fps; to preserve raw hardware clocks, add an
+            # observation.meta.host_stamp_ns feature as shown in
+            # hdf5_to_lerobot.py.
             for step in range(num_steps):
+                # lerobot validates feature dtypes strictly: cast numeric
+                # sources (often float64) to the declared float32 explicitly.
                 frame_data = {
                     "observation.images.endoscope": f[f"{root_name}/observations/rgb"][step],
-                    "observation.state": f[f"{root_name}/scope_state"][step],
-                    "action": f[f"{root_name}/action"][step],
+                    "observation.state": np.asarray(
+                        f[f"{root_name}/scope_state"][step], dtype=np.float32),
+                    "action": np.asarray(
+                        f[f"{root_name}/action"][step], dtype=np.float32),
+                    "task": task_description,
                 }
-                timestamp = f[f"{root_name}/timestep"][step]
-                dataset.add_frame(frame_data, task=task_description, timestamp=timestamp)
+                dataset.add_frame(frame_data)
 
-        dataset.save_episode()  # finalize this episode
+        dataset.save_episode()  # persist this episode
 
     return len(hdf5_files)
 
@@ -166,24 +174,36 @@ def main(
         task_description="Navigate the colonoscope from the rectum to the cecum (failed attempt)",
     )
 
+    # REQUIRED: close the parquet writers before touching metadata. Without
+    # this the footer metadata is never written and the dataset may not load.
+    dataset.finalize()
+
     # --------------------------------------
     # 5. Write custom splits into info.json
     # --------------------------------------
     # The main episodes are divided 70/15/15 into train/val/test. The recovery
     # and failure episodes follow as their own first-class splits, recorded as
-    # episode-index ranges.
+    # episode-index ranges (end-exclusive). The splits are written by editing
+    # meta/info.json directly, which is stable across lerobot versions.
+    # NOTE: int() flooring can produce empty ranges (e.g. "2:2") for very
+    # small datasets; that is harmless but check the printed ranges.
     train_end = int(0.70 * num_main)
     val_end = int(0.85 * num_main)
-    dataset.meta.info["splits"] = {
+    splits = {
         "train": f"0:{train_end}",
         "val": f"{train_end}:{val_end}",
         "test": f"{val_end}:{num_main}",
         "recovery": f"{num_main}:{num_main + num_recovery}",
         "failure": f"{num_main + num_recovery}:{num_main + num_recovery + num_failure}",
     }
-    write_info(dataset.meta.info, dataset.root)
+    info_path = Path(dataset.root) / "meta" / "info.json"
+    with open(info_path, "r", encoding="utf-8") as f:
+        info = json.load(f)
+    info["splits"] = splits
+    with open(info_path, "w", encoding="utf-8") as f:
+        json.dump(info, f, indent=4)
 
-    print("Custom split configuration saved!")
+    print(f"Custom split configuration saved: {splits}")
 
     if push_to_hub:
         print(f"Pushing dataset to Hugging Face Hub: {repo_id}")

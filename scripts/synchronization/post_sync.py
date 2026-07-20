@@ -51,9 +51,13 @@ Dependencies:
   `numpy`
 """
 
-import rospy
+import h5py
+import numpy as np
 import rosbag
+import rospy
 from cv_bridge import CvBridge
+from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import Image
 
 
 class SyncedRosbagExtractor:
@@ -120,11 +124,6 @@ class SyncedRosbagExtractor:
                         pointers[topic] += 1
                         break
 
-
-import numpy as np
-import h5py
-from sensor_msgs.msg import Image
-from geometry_msgs.msg import PoseStamped
 
 if __name__ == '__main__':
     '''

@@ -64,26 +64,20 @@ Contributions are measured in hours of synchronized data. Datasets with video-pa
 
 Before using the conversion scripts and following this dataset preparation guide, install the required version of LeRobot:
 
-### Required Version: LeRobot v0.4.0 or later
+### Required Version: LeRobot 0.6.0
+
+*Requires Python 3.12 or later.*
 
 ```bash
-pip install "lerobot>=0.4.0"
+pip install "lerobot[dataset]==0.6.0"
 ```
 
 ### Version Clarification
 
-- **LeRobot Package Version**: v0.4.0 or later (the Python library)
+- **LeRobot Package Version**: 0.6.0 (the Python library)
 - **LeRobot Dataset Format**: v3.0 (the data structure specification)
 
-These are separate versioning schemes. This guide uses the LeRobot package v0.4.0 or later, which supports the LeRobot dataset format v3.0.
 
-### Already collected in v2.1?
-
-If you already collected data in the LeRobot v2.1 dataset format, convert it with the official script that ships with LeRobot:
-
-```bash
-python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id=<your_repo_id>
-```
 
 ## 📊 Data Formatting: Overview
 
@@ -117,7 +111,7 @@ For successful data integration and analysis, please ensure the following requir
 
 * **README.md**: Complete the [dataset template](templates/dataset_template.md) and include it as `README.md` inside your dataset's `meta/` directory.
 * **Synchronization Guarantees**: Provide clear documentation regarding the synchronization method and sample rates used for your dataset. Include this documentation in your dataset README.
-* **Timestamps**: Include precise timestamps for all data points to facilitate post-processing.
+* **Timestamps (two timelines)**: LeRobot's canonical per-frame `timestamp` column is the frame timeline. The library always writes `frame_index / fps` and does not accept explicit per-frame values. To preserve your ground-truth capture clocks losslessly, additionally store them as the pass-through feature `observation.meta.host_stamp_ns` (int64, Unix-epoch nanoseconds, one per frame), and document both timelines in your dataset README. See [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py) for the reference pattern.
 * **Camera-Frame Kinematics (RGB endoscopy)**: if your primary video stream is RGB endoscopic video, make a best effort to also provide your kinematics as camera-frame motion under `observation.meta.camera_frame_delta_pose`. See [Camera-Frame Kinematics for RGB Endoscopy](#camera-frame-kinematics-for-rgb-endoscopy).
 
 ## Additional Fields
@@ -166,7 +160,7 @@ In a LeRobot dataset for endoluminal robotics, store any additional domain-speci
 To maintain consistency with core LeRobot functionality, the following features **should** be included in your dataset:
 
 * **action**: The action to be executed
-* **observation.state**: The current state of the robot
+* **observation.state**: The primary proprioception describing the state of the robot/endoscope — native kinematics where the platform provides them (e.g., insertion depth, shaft rotation, tip bends), or the tracked tip pose on platforms where that is the only proprioceptive signal. Any additional pose stream beyond the primary state belongs under `observation.meta.<field>` (e.g., `observation.meta.em_pose`), not concatenated into `observation.state`.
 * **observation.images.\<view\>**: The video frame(s) from a provided view (e.g., `observation.images.endoscope`, `observation.images.fluoro`)
 
 *Note: the observation.state and observation.images.\<view\> naming convention is important to follow due to upstream LeRobot tools, like the data visualization module.*
@@ -233,6 +227,15 @@ endoscope_dataset = LeRobotDataset.create(
             "shape": (7,),
             "names": ["dx_m", "dy_m", "dz_m", "dqx", "dqy", "dqz", "dqw"],
         },
+        # Ground-truth capture clock (see "Timestamps (two timelines)" under
+        # Data Requirements): the canonical `timestamp` column is always
+        # frame_index / fps, so preserve raw hardware stamps losslessly here
+        # as int64 Unix-epoch nanoseconds.
+        "observation.meta.host_stamp_ns": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["host_stamp_ns"],
+        },
         # The scope model can change between recorded demonstrations. To account for this,
         # we encourage collaborators to include the observation.meta.scope_type field.
         "observation.meta.scope_type": {
@@ -240,8 +243,9 @@ endoscope_dataset = LeRobotDataset.create(
             "shape": (1,),
             "names": ["scope_type"],
         },
-        # Episode-level instructions can be easily included during dataset creation using
-        # dataset.add_episode(..., task="task here"). However, endoluminal procedures often
+        # Episode-level instructions are attached by passing the task string in
+        # every frame dict handed to add_frame (a "task" key alongside the
+        # features). However, endoluminal procedures often
         # require timestep-level instructions (e.g., "advance toward the cecum", "retroflex
         # at the rectum"). To address this, we encourage collaborators to add the
         # instruction.text feature to each timestep.
@@ -273,6 +277,9 @@ catheter_dataset = LeRobotDataset.create(
         },
         # Here the state is the catheter tip pose from an electromagnetic (EM) tracker
         # (signal tier S2): position in meters plus orientation as a quaternion.
+        # The tracked pose is this platform's PRIMARY (and only) proprioception,
+        # which is why it occupies observation.state here rather than an
+        # observation.meta.<field> — see the observation.state convention above.
         "observation.state": {
             "dtype": "float32",
             "shape": (7,),

@@ -5,7 +5,7 @@ description: Review an Open-H-Endoluminal dataset submission for format complian
 
 # Submission Review
 
-Review a contributed dataset against Open-H-Endoluminal requirements. Submissions are LeRobot format v3.0 datasets (requires the `lerobot` Python package v0.4.0 or later; the package version and the dataset format version are separate versioning schemes). Contributions are measured in hours of synchronized data, never in trajectories or episode counts.
+Review a contributed dataset against Open-H-Endoluminal requirements. Submissions are LeRobot format v3.0 datasets (the guide pins the `lerobot[dataset]==0.6.0` package; any lerobot >= 0.4.0 can read format v3.0 — the package version and the dataset format version are separate versioning schemes). Contributions are measured in hours of synchronized data, never in trajectories or episode counts.
 
 ## Procedure
 
@@ -28,7 +28,7 @@ Expected layout:
 - `data/chunk-*/file-*.parquet` (each parquet aggregates MULTIPLE episodes)
 - `videos/<camera_key>/chunk-*/file-*.mp4`
 
-If you see `meta/episodes.jsonl`, `meta/episodes_stats.jsonl`, `meta/tasks.jsonl`, or `data/chunk-*/episode_*.parquet`, the dataset is still v2.1: the contributor must convert with the official script (module `lerobot.datasets.v30.convert_dataset_v21_to_v30`).
+If you see `meta/episodes.jsonl`, `meta/episodes_stats.jsonl`, `meta/tasks.jsonl`, or `data/chunk-*/episode_*.parquet`, the dataset is still v2.1: the contributor must convert with the official script (module `lerobot.scripts.convert_dataset_v21_to_v30` in lerobot 0.6.0; for local-only datasets add `--root <dataset_dir> --push-to-hub false`, where `--root` is the dataset directory itself).
 
 Confirm `meta/README.md` exists and is a completed copy of `templates/dataset_template.md`: no unfilled `[...]` placeholders, and the synchronization section documents the method and sample rates.
 

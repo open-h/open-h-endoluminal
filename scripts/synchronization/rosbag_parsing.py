@@ -45,10 +45,11 @@ Dependencies:
 """
 
 
-import rosbag
 import pickle
-from cv_bridge import CvBridge
+
 import numpy as np
+import rosbag
+from cv_bridge import CvBridge
 
 
 def image_to_float(bridge, msg):
@@ -63,7 +64,9 @@ def image_to_float(bridge, msg):
     (u or v) as a float. The returned scalar must oscillate with the
     scope-tip wiggle so temp_cali.py can fit a sine wave to it.
     """
-    cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+    # Assignment is deliberately kept so the error message below can point at
+    # the decoded frame a real implementation would operate on.
+    cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")  # noqa: F841
     raise NotImplementedError(
         "image_to_float is a stub: track a visual keypoint or marker in the "
         "endoscope view (cv_image above is the decoded frame) and return one "

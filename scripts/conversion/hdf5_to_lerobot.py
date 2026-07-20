@@ -5,9 +5,8 @@ dataset format v3.0 with an efficient MP4 video backend.
 
 Version assumption:
 -------------------
-Requires the `lerobot` Python package v0.4.0 or later (`pip install "lerobot>=0.4.0"`).
-Note that the package version and the dataset format version are separate
-versioning schemes: lerobot >= 0.4.0 writes datasets in format v3.0.
+Requires the `lerobot` Python package pinned at 0.6.0 with the dataset extra
+(`pip install "lerobot[dataset]==0.6.0"`; Python >= 3.12).
 
 This script processes a directory of HDF5 files, where each file represents a
 single episode. It extracts observations, actions, and state information, and
@@ -31,13 +30,24 @@ match your own capture format):
     │                         with the tip-to-camera calibration already applied.
     │                         Translations must be in METERS; convert
     │                         millimeter sources to meters first.
-    └── timestep              (Dataset): Timestamps for each data point.
+    └── timestep              (Dataset): Capture timestamps for each data point
+                              (this example assumes seconds; adapt the ns
+                              conversion below if yours differ).
 
 The camera_pose stream feeds the 'observation.meta.camera_frame_delta_pose'
 feature (REQUIRED best effort for RGB endoscopy): see
 absolute_poses_to_camera_frame_deltas() below and the README section
 "Camera-Frame Kinematics for RGB Endoscopy". Additional dependencies for
 that computation: numpy and scipy.
+
+Timestamp convention (two timelines):
+-------------------------------------
+LeRobot's canonical per-frame `timestamp` column is the FRAME timeline: the
+library always writes frame_index / fps. Capture (or resample) your streams at a fixed rate so
+that timeline is honest, and preserve your raw hardware clocks losslessly as
+the pass-through feature 'observation.meta.host_stamp_ns' (int64, Unix-epoch
+nanoseconds), as this script does with the source `timestep` stream. Document
+both in your dataset README.
 
 Usage:
 ------
@@ -54,10 +64,9 @@ import h5py
 import numpy as np
 import tqdm
 import tyro
-from scipy.spatial.transform import Rotation
-
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
-from lerobot.constants import HF_LEROBOT_HOME
+from lerobot.utils.constants import HF_LEROBOT_HOME
+from scipy.spatial.transform import Rotation
 
 
 def absolute_poses_to_camera_frame_deltas(poses):
@@ -161,6 +170,15 @@ def convert_data_to_lerobot(data_dir: Path, repo_id: str, *, push_to_hub: bool =
                 "shape": (7,),
                 "names": ["dx_m", "dy_m", "dz_m", "dqx", "dqy", "dqz", "dqw"],
             },
+            # Ground-truth capture clock, preserved losslessly. The canonical
+            # LeRobot `timestamp` column is always frame_index / fps, so raw
+            # hardware stamps live in this pass-through feature instead:
+            # int64 Unix-epoch nanoseconds, one per frame.
+            "observation.meta.host_stamp_ns": {
+                "dtype": "int64",
+                "shape": (1,),
+                "names": ["host_stamp_ns"],
+            },
         },
         image_writer_processes=16,
         image_writer_threads=20,
@@ -193,16 +211,33 @@ def convert_data_to_lerobot(data_dir: Path, repo_id: str, *, push_to_hub: bool =
                     f[f"{root_name}/camera_pose"][:]
                 )
 
+                # Convert the source capture clock to int64 epoch nanoseconds
+                # for the observation.meta.host_stamp_ns feature. This example
+                # assumes `timestep` holds seconds; adapt if your capture
+                # stores nanoseconds (use it directly) or another unit.
+                host_stamp_ns = np.round(
+                    np.asarray(f[f"{root_name}/timestep"][:], dtype=np.float64) * 1e9
+                ).astype(np.int64)
+
                 # Add each frame from the episode to the internal buffer.
+                # lerobot >= 0.4 takes a single dict; the task string rides
+                # INSIDE the dict under the "task" key. The canonical
+                # `timestamp` column is synthesized as frame_index / fps,
+                # which is why the raw clock is preserved as a feature above.
                 for step in range(num_steps):
+                    # lerobot validates feature dtypes strictly: cast numeric
+                    # sources to the declared float32 explicitly.
                     frame_data = {
                         "observation.images.endoscope": f[f"{root_name}/observations/rgb"][step],
-                        "observation.state": f[f"{root_name}/scope_state"][step],
-                        "action": f[f"{root_name}/action"][step],
+                        "observation.state": np.asarray(
+                            f[f"{root_name}/scope_state"][step], dtype=np.float32),
+                        "action": np.asarray(
+                            f[f"{root_name}/action"][step], dtype=np.float32),
                         "observation.meta.camera_frame_delta_pose": camera_frame_deltas[step],
+                        "observation.meta.host_stamp_ns": host_stamp_ns[step : step + 1],
+                        "task": task_description,
                     }
-                    timestamp = f[f"{root_name}/timestep"][step]
-                    dataset.add_frame(frame_data, task=task_description, timestamp=timestamp)
+                    dataset.add_frame(frame_data)
 
             # After processing all frames for an HDF5 file, save the buffered
             # data as a completed episode. This will trigger the video encoding
@@ -214,6 +249,10 @@ def convert_data_to_lerobot(data_dir: Path, repo_id: str, *, push_to_hub: bool =
             # It's good practice to clear the buffer on error to prevent
             # a failed episode from contaminating the next one.
             dataset.clear_episode_buffer()
+
+    # REQUIRED: close the parquet writers. Without this the footer metadata
+    # is never written and the resulting dataset may not load at all.
+    dataset.finalize()
 
     print(f"Dataset conversion complete. Saved to {final_output_path}")
 

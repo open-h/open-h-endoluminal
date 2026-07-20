@@ -227,7 +227,7 @@ action: [insertion_pos, rotation_pos, bend_ud, bend_lr]
 - [ ] **Insertion Depth** (measured at the insertion point)
 - [ ] **Shaft Rotation**
 - [ ] **Tip Bend Angles or Tendon Displacements**
-- [ ] **Tip Pose** (from EM tracking, shape sensing, or inference)
+- [ ] **Tip Pose** (from EM tracking, shape sensing, or inference — in `observation.state` only if it is the platform's primary proprioception; otherwise auxiliary under `observation.meta.<field>`, e.g. `observation.meta.em_pose`)
 - [ ] **Camera-Frame Delta Pose** (`observation.meta.camera_frame_delta_pose`; see the Camera-Frame Kinematics section below)
 - [ ] **Joint / Motor Positions and Velocities** (robotic platforms)
 - [ ] **Guidewire / Catheter State** (advance, rotation)
@@ -239,11 +239,18 @@ action: [insertion_pos, rotation_pos, bend_ud, bend_lr]
 
 **Example:**
 ```
-observation.state: [ins_depth, shaft_rot, bend_ud, bend_lr, tip_x, tip_y, tip_z, tip_qx, tip_qy, tip_qz, tip_qw]
+observation.state: [ins_depth, shaft_rot, bend_ud, bend_lr]
 - ins_depth: insertion depth at the anal verge (mm)
 - shaft_rot: cumulative shaft rotation (rad), positive = clockwise viewed from the operator
 - bend_ud, bend_lr: measured tip bend angles (rad), tip frame
-- tip_x..tip_qw: tip pose in the EM field-generator frame (mm, unit quaternion)
+
+observation.meta.em_pose: [tip_x, tip_y, tip_z, tip_qx, tip_qy, tip_qz, tip_qw]
+- auxiliary EM-tracked tip pose in the field-generator frame (mm, unit quaternion).
+  observation.state carries the platform's PRIMARY proprioception (here the native
+  kinematics); an additional tracked pose is documented as its own
+  observation.meta.<field> feature rather than concatenated into the state. (On a
+  platform whose only proprioception is the tracked pose, the pose itself is
+  observation.state instead.)
 ```
 
 ### Camera-Frame Kinematics (REQUIRED best effort for RGB endoscopy)
@@ -279,9 +286,9 @@ observation.state: [ins_depth, shaft_rot, bend_ud, bend_lr, tip_x, tip_y, tip_z,
 
 ## ⏱️ Data Synchronization Approach (REQUIRED)
 
-*Describe how you achieved temporal alignment across sensors, cameras, and the device or robot. Document the synchronization method and the sample rate of every modality, the provenance of your timestamps (which clock stamped each stream), any measured inter-sensor skew, and the `tolerance_s` value written into your LeRobot dataset (typical: 0.1 s).*
+*Describe how you achieved temporal alignment across sensors, cameras, and the device or robot. Document the synchronization method and the sample rate of every modality, the provenance of your timestamps (which clock stamped each stream), any measured inter-sensor skew, and the `tolerance_s` value written into your LeRobot dataset (typical: 0.1 s). Note that the dataset's canonical `timestamp` column is the frame timeline (`frame_index / fps`); if you preserved your raw hardware clocks as `observation.meta.host_stamp_ns` (encouraged — int64 Unix-epoch nanoseconds), say so here.*
 
-**Example:** *We collect motor encoder states from an OpenRC-style actuation unit and chip-on-tip endoscope frames at 100 Hz and 30 fps respectively, all running in ROS 2 on the same workstation clocked with ROS Time. Both drivers stamp outgoing messages' header.stamp fields from the shared system clock, and we record the joint-state and image topics in a single rosbag2 session. During export to LeRobot v3.0, each data point's header.stamp is written verbatim into the timestamp field, and tolerance_s is set to 0.1. Offline checks show inter-sensor skew stays below 3 ms across a 20-minute capture.*
+**Example:** *We collect motor encoder states from an OpenRC-style actuation unit and chip-on-tip endoscope frames at 100 Hz and 30 fps respectively, all running in ROS 2 on the same workstation clocked with ROS Time. Both drivers stamp outgoing messages' header.stamp fields from the shared system clock, and we record the joint-state and image topics in a single rosbag2 session. During export to LeRobot v3.0, streams are aligned to the 30 fps frame timeline (the dataset's canonical `timestamp` column is frame_index / 30), each row's header.stamp is preserved verbatim as `observation.meta.host_stamp_ns`, and tolerance_s is set to 0.1. Offline checks show inter-sensor skew stays below 3 ms across a 20-minute capture.*
 
 ---
 

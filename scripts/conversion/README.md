@@ -2,9 +2,10 @@
 
 This directory contains example scripts to convert endoluminal robotics datasets from common capture formats into the LeRobot dataset format v3.0, the standard format for Open-H-Endoluminal submissions.
 
-**Version assumption:** all scripts require the `lerobot` Python package v0.4.0 or later (`pip install "lerobot>=0.4.0"`). Note that the package version and the dataset format version are separate versioning schemes: lerobot >= 0.4.0 writes datasets in format v3.0.
 
 The scripts are templates. Adapt the source key names, feature shapes, and state/action dimension names to your platform, but keep the Open-H-Endoluminal feature naming conventions: `action`, `observation.state`, camera streams as `observation.images.<view>` (e.g., `observation.images.endoscope`, `observation.images.fluoro`), per-frame metadata as `observation.meta.<field>`, and timestep-level language in `instruction.text`. Actions are positional setpoints (target positions and angles), not velocities. RGB endoscopy conversions should also populate `observation.meta.camera_frame_delta_pose` (a best-effort requirement; see `absolute_poses_to_camera_frame_deltas()` in `hdf5_to_lerobot.py` and the README section "Camera-Frame Kinematics for RGB Endoscopy").
+
+**Timestamps (two timelines):** LeRobot's canonical `timestamp` column is always `frame_index / fps`. Preserve raw hardware clocks losslessly as `observation.meta.host_stamp_ns` (int64, Unix-epoch nanoseconds); `hdf5_to_lerobot.py` and `zarr_to_lerobot.py` show the pattern.
 
 ## Available Conversion Scripts
 
@@ -75,13 +76,18 @@ dataset = LeRobotDataset.create(
 
 ## Converting existing LeRobot v2.1 datasets
 
-If you already collected data in the LeRobot v2.1 dataset format (as used by Open-H-Embodiment), do not re-convert from your raw capture files. Use the official conversion script that ships with LeRobot:
+If you already collected data in the LeRobot v2.1 dataset format, use the official conversion script that ships with LeRobot 0.6.0:
 
 ```bash
-python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id your-username/your-dataset-name
-```
+# Dataset hosted on the Hugging Face Hub:
+python -m lerobot.scripts.convert_dataset_v21_to_v30 --repo-id your-username/your-dataset-name
 
-Run the module with `--help` to see all options for your installed lerobot version. The v3.0 format replaces the v2.1 files `episodes.jsonl`, `episodes_stats.jsonl`, `tasks.jsonl`, and `data/chunk-*/episode_*.parquet` with `meta/episodes/chunk-*/file-*.parquet`, `meta/stats.json`, `meta/tasks.parquet`, and data files that aggregate multiple episodes per parquet at `data/chunk-*/file-*.parquet`, with videos at `videos/<camera_key>/chunk-*/file-*.mp4`.
+# Local-only dataset: --root is the dataset directory ITSELF (the folder
+# containing meta/, data/, videos/); conversion happens in place and the
+# original is preserved as a sibling <name>_old directory:
+python -m lerobot.scripts.convert_dataset_v21_to_v30 --repo-id your-username/your-dataset-name \
+    --root /path/to/your/dataset --push-to-hub false
+```
 
 ---
 

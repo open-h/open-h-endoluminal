@@ -69,8 +69,10 @@ MIN_LEROBOT_VERSION = "0.4.0"
 
 V21_CONVERSION_HINT = (
     "If your dataset was collected in LeRobot format v2.1, convert it with the "
-    "official script that ships with LeRobot: "
-    "python -m lerobot.datasets.v30.convert_dataset_v21_to_v30"
+    "official script that ships with LeRobot 0.6.0: "
+    "python -m lerobot.scripts.convert_dataset_v21_to_v30 "
+    "(for local-only datasets add --root <dataset_dir> --push-to-hub false, "
+    "where --root is the dataset directory itself)"
 )
 
 
@@ -1433,8 +1435,10 @@ class OpenHEndoluminalValidator:
                             f"(ts[0]={ts[0]:.1f}) stored as float32; precision "
                             "collapse makes per-frame deltas invisible to "
                             "downstream models",
-                            "Convert to relative timestamps (subtract episode "
-                            "start time) or store as float64",
+                            "Rewrite the dataset through the LeRobot API (the "
+                            "canonical timestamp column is frame_index / fps) "
+                            "and preserve epoch clocks as the "
+                            "observation.meta.host_stamp_ns feature (int64 ns)",
                         )
                         has_error = True
                     else:
@@ -1444,8 +1448,9 @@ class OpenHEndoluminalValidator:
                             f"{ep_name}: timestamps appear to be absolute Unix "
                             f"epoch values (ts[0]={ts[0]:.1f}); downstream models "
                             "expect relative timestamps starting near 0",
-                            "Consider converting to relative timestamps "
-                            "(subtract episode start time)",
+                            "The canonical timestamp column should be the "
+                            "frame timeline (frame_index / fps); keep epoch "
+                            "clocks in observation.meta.host_stamp_ns instead",
                         )
                         has_warning = True
                         issue_summary["not_relative"].append(ep_name)
@@ -1552,9 +1557,9 @@ class OpenHEndoluminalValidator:
                             category,
                             f"{ep_name}: first timestamp is {ts[0]:.2f}s; "
                             "timestamps may not be relative to episode start",
-                            "LeRobot defaults to frame_index/fps (starting at 0.0) "
-                            "when no explicit timestamp is provided; most datasets "
-                            "follow this convention",
+                            "LeRobot writes the canonical timestamp column as "
+                            "frame_index/fps (starting at 0.0); raw capture "
+                            "clocks belong in observation.meta.host_stamp_ns",
                         )
                         has_warning = True
 
@@ -1702,10 +1707,11 @@ class OpenHEndoluminalValidator:
                 "lerobot is not installed; skipping the dataset load check "
                 "(all structural, metadata, timestamp, and video checks above "
                 "still ran)",
-                f"Install with: pip install 'lerobot>={MIN_LEROBOT_VERSION}'. "
+                "Install with: pip install 'lerobot[dataset]==0.6.0' (the "
+                "version pinned by the contribution guide; Python >= 3.12). "
                 "Note that the lerobot PACKAGE version and the dataset FORMAT "
-                "version are separate schemes: package v0.4.0 or later reads and "
-                f"writes dataset format v3.0. {V21_CONVERSION_HINT}",
+                "version are separate schemes: any package >= 0.4.0 reads "
+                f"dataset format v3.0. {V21_CONVERSION_HINT}",
             )
             return
 
@@ -1715,10 +1721,11 @@ class OpenHEndoluminalValidator:
                 category,
                 f"lerobot {installed_version} is too old for dataset format v3.0; "
                 f"lerobot>={MIN_LEROBOT_VERSION} is required",
-                f"Upgrade with: pip install 'lerobot>={MIN_LEROBOT_VERSION}'. "
-                "The lerobot PACKAGE version and the dataset FORMAT version are "
-                "separate versioning schemes: package v0.4.0 or later reads and "
-                f"writes dataset format v3.0. {V21_CONVERSION_HINT}",
+                "Upgrade with: pip install 'lerobot[dataset]==0.6.0' (the "
+                "version pinned by the contribution guide). The lerobot PACKAGE "
+                "version and the dataset FORMAT version are separate versioning "
+                f"schemes: any package >= 0.4.0 reads dataset format v3.0. "
+                f"{V21_CONVERSION_HINT}",
             )
             return
 
@@ -1730,7 +1737,9 @@ class OpenHEndoluminalValidator:
                 category,
                 f"Could not import LeRobotDataset from lerobot {installed_version}: "
                 f"{e}. Skipping the dataset load check",
-                f"Reinstall with: pip install 'lerobot>={MIN_LEROBOT_VERSION}'",
+                "Reinstall with: pip install 'lerobot[dataset]==0.6.0' (on "
+                "lerobot >= 0.5 the [dataset] extra is required for dataset "
+                "support)",
             )
             return
 
@@ -1847,7 +1856,7 @@ class OpenHEndoluminalValidator:
         )
 
         # Count results by level
-        print(f"\n📊 Results Overview:")
+        print("\n📊 Results Overview:")
         print(f"  ✅ Success: {self.report.success_count}")
         print(f"  ℹ️  Info: {self.report.info_count}")
         print(f"  ⚠️  Warnings: {self.report.warning_count}")
@@ -1862,7 +1871,7 @@ class OpenHEndoluminalValidator:
 
         # Print errors and warnings by category
         if self.report.error_count > 0:
-            print(f"\n🚨 Critical Issues (Must Fix):")
+            print("\n🚨 Critical Issues (Must Fix):")
             for category, results in categories.items():
                 errors = [r for r in results if r.level == ValidationLevel.ERROR]
                 if errors:
@@ -1873,7 +1882,7 @@ class OpenHEndoluminalValidator:
                             print(f"      → {error.details}")
 
         if self.report.warning_count > 0:
-            print(f"\n⚠️  Recommendations (Should Fix):")
+            print("\n⚠️  Recommendations (Should Fix):")
             for category, results in categories.items():
                 warning_results = [
                     r for r in results if r.level == ValidationLevel.WARNING

@@ -66,12 +66,12 @@ def estimate_offset(t1, y1, t2, y2, w0, a1=1, a2=1):
     Parameters:
     -----------
     t1 : np.ndarray of shape (N,) Time stamps of the first data stream.
-    y1 : np.ndarray of shape (N,) Signal values corresponding to t1 
+    y1 : np.ndarray of shape (N,) Signal values corresponding to t1
     t2 : np.ndarray of shape (N,) Time stamps of the second data stream.
     y2 : np.ndarray of shape (N,) Signal values corresponding to t2.
-    w0 : float Known angular frequency (rad/s) of the periodic motion 
+    w0 : float Known angular frequency (rad/s) of the periodic motion
     a1 : float, optional (default=1) Initial amplitude guess for y1.
-    a2 : float, optional (default=1) Initial amplitude guess for y2. 
+    a2 : float, optional (default=1) Initial amplitude guess for y2.
     Returns:
     --------
     estimated_offset_1 : float
