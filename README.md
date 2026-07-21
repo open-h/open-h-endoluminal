@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/open_h_endoluminal_header.png" alt="Open-H-Endoluminal: endoluminal and interventional robotic platforms, including a robotic endoscope navigating a lumen, a catheter under fluoroscopy, a flexible endoscope, and a scope-tip snare tool" width="640">
+<img src="assets/open_h_endoluminal_header.png" alt="Open-H-Endoluminal: endoluminal and interventional robotic platforms, including a robotic endoscope navigating a lumen, a catheter under fluoroscopy, a flexible endoscope, and a scope-tip snare tool" width="100%">
 
 # Open-H-Endoluminal: Data Contribution How-To Guide
 
