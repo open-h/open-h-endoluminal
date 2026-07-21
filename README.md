@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/open_h_endoluminal_header.png" alt="Open-H-Endoluminal: endoluminal and interventional robotic platforms, including a robotic endoscope navigating a lumen, a catheter under fluoroscopy, a flexible endoscope, and a scope-tip snare tool" width="640">
+
 # Open-H-Endoluminal: Data Contribution How-To Guide
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/YZEhNcTHtc)
@@ -111,7 +113,7 @@ For successful data integration and analysis, please ensure the following requir
 
 * **README.md**: Complete the [dataset template](templates/dataset_template.md) and include it as `README.md` inside your dataset's `meta/` directory.
 * **Synchronization Guarantees**: Provide clear documentation regarding the synchronization method and sample rates used for your dataset. Include this documentation in your dataset README.
-* **Timestamps (two timelines)**: LeRobot's canonical per-frame `timestamp` column is the frame timeline. The library always writes `frame_index / fps` and does not accept explicit per-frame values. To preserve your ground-truth capture clocks losslessly, additionally store them as the pass-through feature `observation.meta.host_stamp_ns` (int64, Unix-epoch nanoseconds, one per frame), and document both timelines in your dataset README. See [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py) for the reference pattern.
+* **Timestamps (per-stream, lossless)**: LeRobot's canonical per-frame `timestamp` column is the frame timeline. The library always writes `frame_index / fps` and does not accept explicit per-frame values. To preserve your ground-truth capture clocks losslessly, additionally store them as pass-through features (int64, Unix-epoch nanoseconds, one per frame): the reference video stream's clock as `observation.meta.host_stamp_ns`, and, when other streams were captured at their own native rate and resampled onto the frame timeline, each of those streams' raw clock as `observation.meta.<stream>_stamp_ns` (e.g., `observation.meta.kinematics_stamp_ns`, `observation.meta.tracker_stamp_ns`). This keeps the pre-resampling timing of every stream auditable, so downstream users can measure per-frame staleness or re-derive the alignment. Document the timelines in your dataset README. See [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py) for the reference pattern.
 * **Camera-Frame Kinematics (RGB endoscopy)**: if your primary video stream is RGB endoscopic video, make a best effort to also provide your kinematics as camera-frame motion under `observation.meta.camera_frame_delta_pose`. See [Camera-Frame Kinematics for RGB Endoscopy](#camera-frame-kinematics-for-rgb-endoscopy).
 
 ## Additional Fields
@@ -227,14 +229,27 @@ endoscope_dataset = LeRobotDataset.create(
             "shape": (7,),
             "names": ["dx_m", "dy_m", "dz_m", "dqx", "dqy", "dqz", "dqw"],
         },
-        # Ground-truth capture clock (see "Timestamps (two timelines)" under
-        # Data Requirements): the canonical `timestamp` column is always
-        # frame_index / fps, so preserve raw hardware stamps losslessly here
-        # as int64 Unix-epoch nanoseconds.
+        # Ground-truth capture clocks (see "Timestamps (per-stream, lossless)"
+        # under Data Requirements): the canonical `timestamp` column is always
+        # frame_index / fps, so preserve each stream's raw hardware clock
+        # losslessly here as int64 Unix-epoch nanoseconds, one per frame.
+        # Reference (endoscope video) stream clock:
         "observation.meta.host_stamp_ns": {
             "dtype": "int64",
             "shape": (1,),
             "names": ["host_stamp_ns"],
+        },
+        # Any non-reference stream captured at its own rate and resampled onto
+        # the 30 fps frame timeline keeps its raw clock under the
+        # observation.meta.<stream>_stamp_ns convention. Here the native
+        # kinematics that fill observation.state are sampled faster than 30 Hz
+        # (by the actuator encoders), so their pre-resampling capture time is
+        # retained; this exposes per-frame staleness and lets downstream users
+        # re-derive the alignment.
+        "observation.meta.kinematics_stamp_ns": {
+            "dtype": "int64",
+            "shape": (1,),
+            "names": ["kinematics_stamp_ns"],
         },
         # The scope model can change between recorded demonstrations. To account for this,
         # we encourage collaborators to include the observation.meta.scope_type field.
@@ -372,8 +387,16 @@ Once the time offset between the streams is estimated, you have two options to a
 
 ### Post-Processing for Time Synchronization
 
-In practice, different sensors may operate at different sampling frequencies. Therefore, one data modality should be chosen as the reference signal, and the other streams are aligned to it. For endoluminal platforms, we typically align all data to the endoscope (or fluoroscopy) video stream, applying the time offset estimated in the preprocessing step. Below is an example of how to perform this synchronization in post-processing:
+In practice, different sensors may operate at different sampling frequencies (for example, endoscope video at 30 Hz and an EM tracker at 20 Hz). One data modality should be chosen as the reference signal, and the other streams resampled onto its timeline. For endoluminal platforms, we typically align all data to the endoscope (or fluoroscopy) video stream, applying the time offset estimated in the preprocessing step. Below is an example of how to perform this synchronization in post-processing:
 [post_sync.py](scripts/synchronization/post_sync.py)
+
+**Resample by field type.** When resampling a stream onto the reference timeline, choose the interpolation method based on what the field represents. Applying a single method to every field can silently corrupt orientation and categorical data:
+
+- **Continuous scalar and positional fields** (e.g., insertion depth, translation, joint and actuator state): linear interpolation.
+- **Quaternion orientation fields** (e.g., tip or camera orientation represented as a quaternion): spherical linear interpolation (Slerp).
+- **Categorical or slowly-changing metadata** (e.g., `observation.meta.scope_type`, procedure-phase labels): zeroth-order hold (carry the most recent value forward).
+
+**Preserve each stream's raw timestamps.** Resampling is lossy, so keep the original signal recoverable: record the raw, pre-resampling capture clock for *every* stream, not only the reference stream. Store each as the pass-through feature `observation.meta.<stream>_stamp_ns` (int64 Unix-epoch nanoseconds, one per frame; e.g., `observation.meta.kinematics_stamp_ns`, `observation.meta.tracker_stamp_ns`), while the reference video stream's clock stays `observation.meta.host_stamp_ns`. This lets downstream users audit or re-derive the alignment with a different method instead of being locked into a single resampled output. See the [Timestamps entry](#data-requirements) under Data Requirements for the full convention.
 
 ## 🔄 Conversion Examples
 

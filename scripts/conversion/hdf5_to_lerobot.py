@@ -30,9 +30,17 @@ match your own capture format):
     │                         with the tip-to-camera calibration already applied.
     │                         Translations must be in METERS; convert
     │                         millimeter sources to meters first.
-    └── timestep              (Dataset): Capture timestamps for each data point
-                              (this example assumes seconds; adapt the ns
-                              conversion below if yours differ).
+    ├── timestep              (Dataset): Endoscope-frame capture timestamps, the
+    │                         reference clock (this example assumes seconds;
+    │                         adapt the ns conversion below if yours differ).
+    └── kinematics_timestep   (Dataset): Separate capture clock for
+                              the scope_state kinematics stream. The kinematics
+                              sample on their own (faster) clock and are
+                              resampled onto the endoscope frame timeline; this
+                              stream is included to show committing a
+                              non-reference stream's raw clock as
+                              observation.meta.kinematics_stamp_ns. Same unit as
+                              timestep (seconds in this example).
 
 The camera_pose stream feeds the 'observation.meta.camera_frame_delta_pose'
 feature (REQUIRED best effort for RGB endoscopy): see
@@ -40,14 +48,21 @@ absolute_poses_to_camera_frame_deltas() below and the README section
 "Camera-Frame Kinematics for RGB Endoscopy". Additional dependencies for
 that computation: numpy and scipy.
 
-Timestamp convention (two timelines):
--------------------------------------
+Timestamp convention (per-stream, lossless):
+--------------------------------------------
 LeRobot's canonical per-frame `timestamp` column is the FRAME timeline: the
 library always writes frame_index / fps. Capture (or resample) your streams at a fixed rate so
 that timeline is honest, and preserve your raw hardware clocks losslessly as
-the pass-through feature 'observation.meta.host_stamp_ns' (int64, Unix-epoch
-nanoseconds), as this script does with the source `timestep` stream. Document
-both in your dataset README.
+pass-through features (int64, Unix-epoch nanoseconds, one per frame). The
+reference (video) stream's clock is 'observation.meta.host_stamp_ns', as this
+script does with the source `timestep` stream. When other streams are captured
+at their own native rate and resampled onto the frame timeline, keep each
+stream's raw clock under the same convention as
+'observation.meta.<stream>_stamp_ns' (e.g. 'observation.meta.kinematics_stamp_ns',
+'observation.meta.tracker_stamp_ns'); resample by field type (linear for
+continuous or positional fields, Slerp for quaternion orientation, zeroth-order
+hold for categorical or slowly-changing metadata). Document the timelines in
+your dataset README.
 
 Usage:
 ------
@@ -170,14 +185,28 @@ def convert_data_to_lerobot(data_dir: Path, repo_id: str, *, push_to_hub: bool =
                 "shape": (7,),
                 "names": ["dx_m", "dy_m", "dz_m", "dqx", "dqy", "dqz", "dqw"],
             },
-            # Ground-truth capture clock, preserved losslessly. The canonical
+            # Ground-truth capture clocks, preserved losslessly. The canonical
             # LeRobot `timestamp` column is always frame_index / fps, so raw
-            # hardware stamps live in this pass-through feature instead:
+            # hardware stamps live in these pass-through features instead:
             # int64 Unix-epoch nanoseconds, one per frame.
+            #
+            # host_stamp_ns is the REFERENCE (endoscope video) stream's clock.
             "observation.meta.host_stamp_ns": {
                 "dtype": "int64",
                 "shape": (1,),
                 "names": ["host_stamp_ns"],
+            },
+            # kinematics_stamp_ns is a NON-REFERENCE stream's clock, shown here
+            # for clarity. The scope_state kinematics sample on their own faster
+            # clock and are resampled onto the 30 fps endoscope frame timeline,
+            # so we retain the raw capture time of the kinematics sample used at
+            # each frame. This follows the observation.meta.<stream>_stamp_ns
+            # convention and exposes per-frame staleness between the video and
+            # the kinematics, letting downstream users re-derive the alignment.
+            "observation.meta.kinematics_stamp_ns": {
+                "dtype": "int64",
+                "shape": (1,),
+                "names": ["kinematics_stamp_ns"],
             },
         },
         image_writer_processes=16,
@@ -211,12 +240,20 @@ def convert_data_to_lerobot(data_dir: Path, repo_id: str, *, push_to_hub: bool =
                     f[f"{root_name}/camera_pose"][:]
                 )
 
-                # Convert the source capture clock to int64 epoch nanoseconds
-                # for the observation.meta.host_stamp_ns feature. This example
-                # assumes `timestep` holds seconds; adapt if your capture
-                # stores nanoseconds (use it directly) or another unit.
+                # Convert each source capture clock to int64 epoch nanoseconds
+                # for the observation.meta.*_stamp_ns features. This example
+                # assumes the `timestep` streams hold seconds; adapt if your
+                # capture stores nanoseconds (use it directly) or another unit.
+                #
+                # Reference (endoscope video) frame clock:
                 host_stamp_ns = np.round(
                     np.asarray(f[f"{root_name}/timestep"][:], dtype=np.float64) * 1e9
+                ).astype(np.int64)
+                # Non-reference kinematics stream clock (see the
+                # schema above): the raw capture time of the scope_state sample
+                # used at each frame, preserved so its resampling stays auditable.
+                kinematics_stamp_ns = np.round(
+                    np.asarray(f[f"{root_name}/kinematics_timestep"][:], dtype=np.float64) * 1e9
                 ).astype(np.int64)
 
                 # Add each frame from the episode to the internal buffer.
@@ -235,6 +272,7 @@ def convert_data_to_lerobot(data_dir: Path, repo_id: str, *, push_to_hub: bool =
                             f[f"{root_name}/action"][step], dtype=np.float32),
                         "observation.meta.camera_frame_delta_pose": camera_frame_deltas[step],
                         "observation.meta.host_stamp_ns": host_stamp_ns[step : step + 1],
+                        "observation.meta.kinematics_stamp_ns": kinematics_stamp_ns[step : step + 1],
                         "task": task_description,
                     }
                     dataset.add_frame(frame_data)

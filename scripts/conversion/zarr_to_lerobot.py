@@ -118,7 +118,10 @@ def convert_data_to_lerobot(data_path: Path, repo_id: str, *, push_to_hub: bool 
             # Ground-truth capture clock, preserved losslessly. The canonical
             # LeRobot `timestamp` column is always frame_index / fps, so the
             # raw hardware stamps live in this pass-through feature: int64
-            # Unix-epoch nanoseconds, one per frame.
+            # Unix-epoch nanoseconds, one per frame. This is the reference
+            # (video) stream's clock; additional streams resampled onto the
+            # frame timeline keep their raw clock under the same
+            # observation.meta.<stream>_stamp_ns convention.
             "observation.meta.host_stamp_ns": {
                 "dtype": "int64",
                 "shape": (1,),
