@@ -5,7 +5,7 @@
 # Open-H-Endoluminal: Data Contribution How-To Guide
 
 [![Website](https://img.shields.io/badge/Open--H-Website-0A66C2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://www.open-h.org/)
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/YZEhNcTHtc)
+[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/dWxQqdxps)
 [![LeRobot](https://img.shields.io/badge/LeRobot-dataset%20v3.0-FF6B6B?style=for-the-badge)](https://huggingface.co/docs/lerobot)
 [![License](https://img.shields.io/badge/License-CC%20BY%204.0-4CAF50?style=for-the-badge)](https://creativecommons.org/licenses/by/4.0/)
 
@@ -455,7 +455,7 @@ This repository ships agent skills and instructions so AI coding agents can help
 
 We welcome contributions from the community! Please ensure your data follows the guidelines outlined in this document and includes proper documentation using our [dataset template](templates/dataset_template.md).
 
-- **Join our Discord**: [discord.gg/YZEhNcTHtc](https://discord.gg/YZEhNcTHtc) (shared Open-H community): connect with other contributors, ask questions, and share your progress
+- **Join our Discord**: [discord.gg/dWxQqdxps](https://discord.gg/dWxQqdxps) (shared Open-H community): connect with other contributors, ask questions, and share your progress
 - **Report Issues**: Open an issue in this repository for bugs or feature requests
 - **Technical questions**: Nigel Nelson, nigeln@nvidia.com (NVIDIA); Siddhartha Kapuria, skapuria@utexas.edu (UT Austin)
 - **Administrative questions**: Sean Huver, shuver@nvidia.com

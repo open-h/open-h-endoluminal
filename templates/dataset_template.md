@@ -303,4 +303,4 @@ observation.meta.em_pose: [tip_x, tip_y, tip_z, tip_qx, tip_qy, tip_qz, tip_qw]
 | **Contact Email** | `[email1@example.com, email2@example.com, ...]` |
 | **Citation (BibTeX)** | <pre><code>@misc{[your_dataset_name_2026],<br>  author = {[Your Name(s)]},<br>  title = {[Your Dataset Title]},<br>  year = {2026},<br>  publisher = {Open-H-Endoluminal},<br>  note = {De-identified to HIPAA Safe Harbor or an equivalent standard prior to release.}<br>}</code></pre> |
 
-*Questions about this template? Technical: Nigel Nelson (nigeln@nvidia.com). Administrative: Sean Huver (shuver@nvidia.com). Community: https://discord.gg/YZEhNcTHtc*
+*Questions about this template? Technical: Nigel Nelson (nigeln@nvidia.com). Administrative: Sean Huver (shuver@nvidia.com). Community: https://discord.gg/dWxQqdxps*
