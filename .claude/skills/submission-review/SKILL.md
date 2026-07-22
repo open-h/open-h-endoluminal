@@ -49,16 +49,16 @@ Every submission must state, in `meta/README.md` and the dataset metadata:
 
 Inspect the `features` in `meta/info.json` and sample the data, then classify:
 
-- S1 (weight x20): native robot kinematics in `action` / `observation.state` (joint and actuator state, motor commands, insertion depth, tip pose, teleoperation commands).
-- S2 (weight x5): tracked pose (electromagnetic tracking, fiber-optic shape sensing, magnetic tracker through the tool channel, e.g. `observation.meta.em_pose`).
+- S1 (weight x5): native robot kinematics in `action` / `observation.state` (joint and actuator state, motor commands, insertion depth, tip pose, teleoperation commands).
+- S2 (weight x4): tracked pose (electromagnetic tracking, fiber-optic or EM shape sensing, magnetic tracker through the tool channel, e.g. `observation.meta.em_pose`).
 - S3 (weight x2): inferred pose (SLAM, SfM, or point tracking from camera; pose inferred from fluoroscopy).
-- S4 (weight x1): video with rich labels only (segmentation, depth or 3D, procedure phase, VQA, chain-of-thought traces, polyp and lesion annotations).
+- S4 (weight x2): no kinematics, rich annotations instead (segmentation, depth or 3D, procedure phase, VQA, chain-of-thought traces, anomaly annotations, de-identified reports).
 
 Flag any mismatch between the claimed tier and what the features actually contain (for example, `observation.state` filled with zeros or a constant is not S1).
 
 ### 5. Compute hours and compare against minimums
 
-Hours = `total_frames / fps / 3600`, both read from `meta/info.json`. Cross-check against the total hours stated in `meta/README.md`. Compare against the per-setting hour minimums in `open-h-endoluminal-rfp.md` (Section 3.6); read them from the RFP, never from memory, and never copy the RFP tables into other documents. Note the RFP minimums tables cover S1 to S3; S4 submissions are weighted x1 and reviewed case-by-case, so flag their hours for steering review instead of a hard pass/fail. Report hours only, not episode counts.
+Hours = `total_frames / fps / 3600`, both read from `meta/info.json`. Cross-check against the total hours stated in `meta/README.md`. Compare against the per-setting hour minimums in the RFP, `assets/open-h-endoluminal-rfp.pdf` (Section 3.6); read them from the RFP, never from memory, and never copy the RFP tables into other documents. Note the RFP minimums table (S1 through S4) applies only to RGB endoscopy datasets; fluoroscopy-based submissions are considered case-by-case, so flag their hours for steering review instead of a hard pass/fail. Report hours as well as episode counts.
 
 ### 6. Confirm this is not raw unlabeled video
 
@@ -84,7 +84,7 @@ Verdict is one of: **accept**, **accept-with-fixes**, **needs-work**.
 ## Summary
 - Hours (computed): <X.X> h  (claimed: <Y.Y> h)
 - Signal tier (assessed): S<i>  (claimed: S<j>)
-- Collection setting: <setting>; RFP minimum for this setting/tier: see open-h-endoluminal-rfp.md Section 3.6
+- Collection setting: <setting>; RFP minimum for this setting/tier: see assets/open-h-endoluminal-rfp.pdf Section 3.6
 - Validator: <E> errors, <W> warnings
 
 ## Findings

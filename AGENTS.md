@@ -9,7 +9,7 @@ Open-H-Endoluminal is an open, multi-institution dataset initiative for endoscop
 | Path | Purpose |
 | :--- | :--- |
 | `README.md` | Contribution guide: scope, task hierarchy, format requirements, submission funnel; links to the RFP for signal tiers, collection settings, and required metadata. |
-| `open-h-endoluminal-rfp.md` | RFP working draft, kept verbatim. DO NOT EDIT (see note below). |
+| `assets/open-h-endoluminal-rfp.pdf` | The canonical, finalized RFP. DO NOT MODIFY (see note below). |
 | `templates/dataset_template.md` | Dataset README template; contributors complete a copy as `meta/README.md` inside their dataset. |
 | `scripts/conversion/README.md` | Overview of the converters plus video-encoding performance tuning notes. |
 | `scripts/conversion/hdf5_to_lerobot.py` | Converts a directory of per-episode HDF5 files to a LeRobot dataset. |
@@ -28,15 +28,15 @@ Open-H-Endoluminal is an open, multi-institution dataset initiative for endoscop
 
 Tier weights multiply contributed hours; higher tiers are rarer and more valuable.
 
-- S1, native robot kinematics (joint and actuator state, motor commands, insertion depth, tip pose, teleoperation commands), weight x20. Example: OpenRC-style native capture.
-- S2, tracked pose (electromagnetic tracking, fiber-optic shape sensing, magnetic tracker through the tool channel), weight x5.
+- S1, native robot kinematics (joint and actuator state, motor commands, insertion depth, tip pose, teleoperation commands), weight x5. Example: OpenRC-style native capture.
+- S2, tracked pose (electromagnetic tracking, fiber-optic or EM shape sensing, magnetic tracker through the tool channel), weight x4.
 - S3, inferred pose (SLAM, SfM, or point tracking from camera; pose inferred from fluoroscopy), weight x2.
-- S4, video with rich labels (segmentation, depth or 3D, procedure phase, VQA, chain-of-thought traces, polyp and lesion annotations), weight x1.
+- S4, no kinematics, rich annotations instead (segmentation, depth or 3D, procedure phase, VQA, chain-of-thought traces, anomaly annotations, de-identified reports), weight x2.
 - Raw, unlabeled video is NOT accepted.
 
 ## Collection-Setting Vocabulary
 
-In preference order: clinical (human), in-vivo (animal), ex-vivo (animal tissue), phantom / bench-top, simulation (digital). Simulation is an explicitly welcomed contribution path. Per-setting hour minimums live in `open-h-endoluminal-rfp.md`; LINK to the RFP for those numbers, never duplicate its tables (they would go stale).
+In preference order: clinical (human), in-vivo (animal), ex-vivo (animal tissue), phantom / bench-top, simulation (digital). Simulation is an explicitly welcomed contribution path. Per-setting hour minimums live in the RFP (`assets/open-h-endoluminal-rfp.pdf`, Section 3.6) and apply to RGB endoscopy datasets; fluoroscopy-based dataset proposals are considered case-by-case. LINK to the RFP for those numbers, never duplicate its tables (they would go stale).
 
 ## Feature-Naming Conventions
 
@@ -62,6 +62,6 @@ Use the `submission-review` skill (`.claude/skills/submission-review/SKILL.md`).
 
 Use the `dataset-conversion` skill (`.claude/skills/dataset-conversion/SKILL.md`). In short: identify the source layout (HDF5, Zarr, ROS bags, CSV plus frames), establish synchronization with `scripts/synchronization/`, map streams to the feature-naming conventions above, adapt a converter from `scripts/conversion/`, then run the validator and iterate until it passes clean.
 
-## Do Not Edit the RFP
+## Do Not Modify the RFP
 
-`open-h-endoluminal-rfp.md` is a verbatim working draft and must not be edited by agents. A finalized version will replace it. If other documents need numbers that live in the RFP (per-setting hour minimums, the steering group table), link to the RFP rather than copying them.
+The canonical, finalized RFP is `assets/open-h-endoluminal-rfp.pdf`; it must not be modified or replaced by agents. If other documents need numbers that live in the RFP (per-setting hour minimums, tier weights, the steering group table), link to the PDF rather than copying them.

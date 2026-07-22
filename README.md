@@ -4,6 +4,7 @@
 
 # Open-H-Endoluminal: Data Contribution How-To Guide
 
+[![Website](https://img.shields.io/badge/Open--H-Website-0A66C2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://www.open-h.org/)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/YZEhNcTHtc)
 [![LeRobot](https://img.shields.io/badge/LeRobot-dataset%20v3.0-FF6B6B?style=for-the-badge)](https://huggingface.co/docs/lerobot)
 [![License](https://img.shields.io/badge/License-CC%20BY%204.0-4CAF50?style=for-the-badge)](https://creativecommons.org/licenses/by/4.0/)
@@ -18,38 +19,31 @@ Open-H-Endoluminal grows out of [Open-H-Embodiment](https://github.com/open-h/op
 
 ## How to Participate
 
+Visit the [Open-H website](https://www.open-h.org/) for a general overview of the initiative.
+
 1. **Review the Request for Proposals**
-   Read the [Open-H-Endoluminal RFP](./open-h-endoluminal-rfp.md) to confirm your proposed dataset aligns with the initiative. The RFP outlines the technical scope, eligibility, per-setting hour minimums, and evaluation criteria for proposals reviewed by the steering group.
+   Read the [Open-H-Endoluminal RFP](assets/open-h-endoluminal-rfp.pdf) to confirm your proposed dataset aligns with the initiative. The RFP outlines the technical scope, eligibility, per-setting hour minimums, and proposal requirements for submissions reviewed by the steering group.
 
-2. **Submit Your Proposal**
-   Submit your proposal through the Google Form: [Google Form link coming soon]
+2. **Complete the Onboarding Form**
+   Develop your proposal describing the dataset, collection methodology, and specific tasks, following the instructions in the RFP. Submit it through the [collaborator onboarding form](https://docs.google.com/forms/d/e/1FAIpQLSdjVhTu7Nfcz5sINvJWlDVcp2xFr4JIRKq6iov0jDyOj2BEIg/viewform?usp=header) to be considered as a collaborator in the effort.
 
-   If the form is not yet available, email shuver@nvidia.com with the subject "Open-H-Endoluminal RFP".
-
-3. **Receive Your Upload Folder**
-   Upon acceptance, a dedicated upload folder is provisioned for your institution (and each participating lab, if applicable) to keep contributions organized.
-
-4. **Format, Validate, and Upload Your Data**
-   Convert your data to the LeRobot v3.0 format, complete the [dataset template](templates/dataset_template.md), run the [validation script](scripts/validation/validate_formatting.py), and upload to your provisioned folder.
-
-5. **Inclusion in the Public Release**
-   Accepted and properly formatted contributions will be incorporated into the public release of the dataset and models in March 2027 at NVIDIA GTC, subject to review for quality, documentation completeness, and licensing compliance.
+Once your proposal is approved, the Open-H team will reach out with the next steps to onboard you as a collaborator.
 
 ## Scope at a Glance
 
-### Domains (in preference order)
+### Domains
 
-The ordering below signals priority, but data is accepted broadly across the entire endoluminal scope, and contributions are welcome in every listed domain:
+Data is accepted broadly across the entire endoluminal scope, and contributions are welcome in every listed domain:
 
-1. **Lower and upper GI endoscopy**: navigation and intubation; the task hierarchy also covers screening/coverage, detection/diagnosis, and intervention such as biopsy and polypectomy.
-2. **Bronchoscopy**: navigation to airway targets, transbronchial biopsy.
-3. **Endovascular and catheter-based intervention**: navigation to a vascular target, labeled separately from the target intervention such as clot removal. Visualization is fluoroscopic rather than endoscopic, so this domain may be supported through simulation.
-4. **Ureteroscopy and transurethral**: navigation and diagnostic or interventional tasks in the urinary tract.
-5. **Capsule, continuum, and soft-robotic systems**: locomotion and navigation inside lumens.
+* **Lower and upper GI endoscopy**: navigation and intubation; example tasks also cover screening/coverage, detection/diagnosis, and intervention such as biopsy and polypectomy.
+* **Bronchoscopy**: navigation to airway targets, transbronchial biopsy.
+* **Endovascular and catheter-based intervention**: navigation and interventional tasks across robotic endovascular and catheter-based procedures (for example thrombectomy, stenting, angioplasty, cardiac ablation). Visualization is fluoroscopic rather than endoscopic; fluoroscopy-based dataset proposals are considered case-by-case (see the RFP).
+* **Ureteroscopy and transurethral**: navigation and diagnostic or interventional tasks in the urinary tract.
+* **Wireless and untethered endoluminal systems**: active locomotion, magnetic actuation, and navigation for capsule endoscopes and untethered robots in lumens not served by tethered platforms.
 
-### Task Hierarchy
+### Tasks
 
-Every submission must state its task intent and the target. Tasks fall into four categories:
+Every submission must state its task intent and the target. Some example tasks are:
 
 * **Navigation**: movement toward a stated target, never unlabeled wandering.
 * **Screening / coverage**: systematic inspection of a lumen or region.
@@ -58,9 +52,7 @@ Every submission must state its task intent and the target. Tasks fall into four
 
 ### Out of Scope
 
-Laparoscopy, arthroscopy, and rigid-arm manipulation are out of scope for this initiative. Please redirect those contributions to [Open-H-Embodiment](https://github.com/open-h/open-h-embodiment).
-
-Contributions are measured in hours of synchronized data. Datasets with video-paired kinematics are strongly preferred, though the initiative is flexible on how the kinematics are captured, and raw, unlabeled video is not accepted. For the signal tiers and their weights, collection settings, per-setting hour minimums, required metadata, and steering group details, see the [RFP](./open-h-endoluminal-rfp.md).
+Laparoscopy, arthroscopy, and rigid-instrument manipulation are out of scope for this initiative. Please redirect those contributions to [Open-H-Embodiment](https://github.com/open-h/open-h-embodiment).
 
 ## 🚀 LeRobot Installation
 
@@ -442,17 +434,17 @@ This repository ships agent skills and instructions so AI coding agents can help
 
 | Milestone | Date |
 | :---- | :---- |
-| Private recruitment | Underway |
-| RFP released | September 2026 |
-| Proposal deadline | October 2026 |
-| Data collection | October 2026 to January 2027 |
-| Cleanup and standardization | January 2027 |
+| RFP released | July 2026 |
+| Proposal submission deadline | September 2026 |
+| Data collection window | September 2026 to January 2027 |
+| Data sample deadline | December 1, 2026 |
+| Data cleanup and standardization | January 2027 |
 | Model training and validation | February 2027 |
 | Public release of dataset and models | March 2027 at NVIDIA GTC |
 
 ## Additional Resources
 
-- [Open-H-Endoluminal RFP](./open-h-endoluminal-rfp.md)
+- [Open-H-Endoluminal RFP](assets/open-h-endoluminal-rfp.pdf)
 - [LeRobot Documentation](https://huggingface.co/docs/lerobot)
 - [Dataset Template](templates/dataset_template.md)
 - [Conversion Scripts](scripts/conversion/)
@@ -465,7 +457,7 @@ We welcome contributions from the community! Please ensure your data follows the
 
 - **Join our Discord**: [discord.gg/YZEhNcTHtc](https://discord.gg/YZEhNcTHtc) (shared Open-H community): connect with other contributors, ask questions, and share your progress
 - **Report Issues**: Open an issue in this repository for bugs or feature requests
-- **Technical questions**: Nigel Nelson, nigeln@nvidia.com
+- **Technical questions**: Nigel Nelson, nigeln@nvidia.com (NVIDIA); Siddhartha Kapuria, skapuria@utexas.edu (UT Austin)
 - **Administrative questions**: Sean Huver, shuver@nvidia.com
 
 ---

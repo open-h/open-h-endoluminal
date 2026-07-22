@@ -702,10 +702,10 @@ class OpenHEndoluminalValidator:
                     category,
                     "No action, state, or pose signal found, but rich-label "
                     f"features are present ({', '.join(rich_label_features[:3])})",
-                    "This looks like a video-with-rich-labels submission (signal "
-                    "tier S4, weight x1, reviewed case-by-case). Document the S4 "
-                    "tier and the label types in meta/README.md; raw video without "
-                    "such labels is not accepted",
+                    "This looks like a rich-annotations submission (signal tier "
+                    "S4, weight x2 per the RFP). Document the S4 tier and the "
+                    "annotation types in meta/README.md; raw video without such "
+                    "annotations is not accepted",
                 )
             else:
                 self.add_result(
@@ -1173,7 +1173,8 @@ class OpenHEndoluminalValidator:
                 f"info.json accounting: {int(total_frames)} frames at {fps:g} Hz "
                 f"= {hours:.2f} hours of synchronized data",
                 "Hours are the Open-H-Endoluminal contribution unit; per-setting "
-                "minimums are listed in the RFP (open-h-endoluminal-rfp.md)",
+                "minimums are listed in the RFP "
+                "(assets/open-h-endoluminal-rfp.pdf, Section 3.6)",
             )
         else:
             self.add_result(
@@ -1852,7 +1853,7 @@ class OpenHEndoluminalValidator:
             print("  Could not be computed (info.json needs total_frames and fps)")
         print(
             "  Per-setting hour minimums are listed in the RFP "
-            "(open-h-endoluminal-rfp.md)."
+            "(assets/open-h-endoluminal-rfp.pdf, Section 3.6)."
         )
 
         # Count results by level

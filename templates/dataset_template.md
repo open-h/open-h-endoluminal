@@ -78,12 +78,12 @@ details of your contribution.
 
 ## 📡 Signal Tier (REQUIRED)
 
-*Check the highest tier present, plus any additional tiers included. See the Open-H-Endoluminal RFP (`open-h-endoluminal-rfp.md` in the contribution guide repository) for how tiers weight contributed hours; its tables cover S1 to S3, while S4 submissions are weighted x1 and reviewed case-by-case. Raw, unlabeled video is not accepted.*
+*Check the highest tier present, plus any additional tiers included. See the Open-H-Endoluminal RFP (`assets/open-h-endoluminal-rfp.pdf` in the contribution guide repository, Section 3.6) for how tiers weight contributed hours and the per-setting minimums (RGB endoscopy datasets; fluoroscopy-based submissions are considered case-by-case). Raw, unlabeled video is not accepted.*
 
 - [ ] **S1: Native robot kinematics** (joint and actuator state, motor commands, insertion depth, tip pose, teleoperation commands)
-- [ ] **S2: Tracked pose** (electromagnetic tracking, fiber-optic shape sensing, magnetic tracker through the tool channel)
+- [ ] **S2: Tracked pose** (electromagnetic tracking, fiber-optic or EM shape sensing, magnetic tracker through the tool channel)
 - [ ] **S3: Inferred pose** (SLAM, SfM, or point tracking from camera; pose inferred from fluoroscopy)
-- [ ] **S4: Video with rich labels** (segmentation, depth or 3D, procedure phase, VQA, chain-of-thought traces, polyp and lesion annotations)
+- [ ] **S4: No kinematics, rich annotations instead** (segmentation, depth or 3D, procedure phase, VQA, chain-of-thought traces, anomaly annotations, de-identified reports)
 
 **Signal source (REQUIRED):** *One line describing where the tier-defining signal comes from.*
 
@@ -95,7 +95,7 @@ details of your contribution.
 
 ### Collection Setting (REQUIRED)
 
-*Check all settings present. If mixed, report hours per setting in the Dataset Overview table. Per-setting hour minimums are listed in the Open-H-Endoluminal RFP (`open-h-endoluminal-rfp.md` in the contribution guide repository).*
+*Check all settings present. If mixed, report hours per setting in the Dataset Overview table. Per-setting hour minimums are listed in the Open-H-Endoluminal RFP (`assets/open-h-endoluminal-rfp.pdf` in the contribution guide repository, Section 3.6).*
 
 - [ ] **Clinical (human)**
 - [ ] **In-vivo (animal)**
