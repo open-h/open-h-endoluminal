@@ -44,6 +44,7 @@ Every submission must state, in `meta/README.md` and the dataset metadata:
 - Licence (CC BY 4.0) and de-identification status (HIPAA Safe Harbor or equivalent, GDPR for European contributors).
 - Where a robot is involved: calibration data and scope or robot CAD / kinematic-tree descriptions (USD, URDF, DH parameters, or equivalent).
 - RGB endoscopy submissions: `observation.meta.camera_frame_delta_pose` present (best-effort requirement, with the supporting calibration and derivation method documented), or a justification in `meta/README.md` for why camera-frame kinematics were infeasible. Fluoroscopy-only submissions are exempt.
+- Camera intrinsics (strongly encouraged for RGB endoscopy): a `meta/calibration/camera_intrinsics.json` file keyed by camera feature name. Note its absence as a fix item rather than a hard blocker.
 
 ### 4. Classify the actual signal tier
 

@@ -7,6 +7,8 @@ The scripts are templates. Adapt the source key names, feature shapes, and state
 
 **Timestamps (two timelines):** LeRobot's canonical `timestamp` column is always `frame_index / fps`. Preserve raw hardware clocks losslessly as `observation.meta.host_stamp_ns` (int64, Unix-epoch nanoseconds); `hdf5_to_lerobot.py` and `zarr_to_lerobot.py` show the pattern.
 
+**Camera intrinsics:** static, so written once as `meta/calibration/camera_intrinsics.json` (keyed by camera feature name) rather than as a per-frame feature. Strongly encouraged for RGB endoscopy; `write_camera_intrinsics()` in `hdf5_to_lerobot.py` shows the pattern.
+
 ## Available Conversion Scripts
 
 ### `hdf5_to_lerobot.py`

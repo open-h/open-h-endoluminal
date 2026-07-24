@@ -64,6 +64,14 @@ continuous or positional fields, Slerp for quaternion orientation, zeroth-order
 hold for categorical or slowly-changing metadata). Document the timelines in
 your dataset README.
 
+Camera intrinsics:
+------------------
+Including the camera intrinsics is strongly encouraged for RGB endoscopy (they
+are required for depth, 3D reconstruction, and SLAM). Because intrinsics are
+static for a fixed-focal-length camera, they are written once as
+'meta/calibration/camera_intrinsics.json' (see CAMERA_INTRINSICS and
+write_camera_intrinsics below), not as a per-frame feature.
+
 Usage:
 ------
     python hdf5_to_lerobot.py --data-dir /path/to/your/hdf5/files --repo-id your-username/your-dataset-name
@@ -72,6 +80,7 @@ To also push to the Hub:
     python hdf5_to_lerobot.py --data-dir /path/to/your/hdf5/files --repo-id your-username/your-dataset-name --push-to-hub
 """
 
+import json
 import shutil
 from pathlib import Path
 
@@ -82,6 +91,54 @@ import tyro
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.utils.constants import HF_LEROBOT_HOME
 from scipy.spatial.transform import Rotation
+
+# Static per-camera intrinsics for the chip-on-tip endoscope camera. Including
+# intrinsics is strongly encouraged for RGB endoscopy: they are required for the
+# depth estimation, 3D reconstruction, and SLAM uses the initiative targets.
+#
+# Intrinsics do not change frame to frame for a fixed-focal-length camera, so
+# they are written ONCE as a calibration file (see write_camera_intrinsics
+# below and the README section "Camera Intrinsics") rather than repeated in
+# every frame. Key the dict by camera feature name so a multi-camera rig lists
+# each stream (e.g. add an "observation.images.fluoro" entry). Replace these
+# placeholder values with your own OpenCV pinhole calibration: fx, fy, cx, cy
+# in pixels, and the distortion model plus coefficients for your lens. If your
+# intrinsics genuinely vary per frame (an optical or digital zoom), store them
+# instead as a per-frame "observation.meta.camera_intrinsics" feature.
+CAMERA_INTRINSICS = {
+    "observation.images.endoscope": {
+        "model": "pinhole",
+        "width": 640,
+        "height": 480,
+        "fx": 512.3,
+        "fy": 512.8,
+        "cx": 319.6,
+        "cy": 240.2,
+        # OpenCV radtan/plumb_bob coefficients [k1, k2, p1, p2, k3]; use
+        # "none" with an empty list if your frames are already undistorted.
+        "distortion_model": "opencv_radtan",
+        "distortion_coeffs": [0.0, 0.0, 0.0, 0.0, 0.0],
+    },
+}
+
+
+def write_camera_intrinsics(dataset_root: Path, intrinsics: dict) -> None:
+    """Write per-camera intrinsics to meta/calibration/camera_intrinsics.json.
+
+    Args:
+        dataset_root: The LeRobotDataset root (dataset.root); meta/ lives here.
+        intrinsics: Mapping of camera feature name -> intrinsics dict.
+
+    Note:
+        Call this AFTER dataset.finalize() so the LeRobot writers do not
+        clobber the calibration directory.
+    """
+    calibration_dir = dataset_root / "meta" / "calibration"
+    calibration_dir.mkdir(parents=True, exist_ok=True)
+    out_path = calibration_dir / "camera_intrinsics.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(intrinsics, f, indent=2)
+    print(f"Wrote intrinsics for {len(intrinsics)} camera(s) to {out_path}")
 
 
 def absolute_poses_to_camera_frame_deltas(poses):
@@ -291,6 +348,11 @@ def convert_data_to_lerobot(data_dir: Path, repo_id: str, *, push_to_hub: bool =
     # REQUIRED: close the parquet writers. Without this the footer metadata
     # is never written and the resulting dataset may not load at all.
     dataset.finalize()
+
+    # Persist the static per-camera intrinsics as a calibration file. Intrinsics
+    # are written after finalize() so the LeRobot writers do not overwrite the
+    # calibration directory.
+    write_camera_intrinsics(dataset.root, CAMERA_INTRINSICS)
 
     print(f"Dataset conversion complete. Saved to {final_output_path}")
 

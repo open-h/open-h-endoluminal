@@ -198,6 +198,9 @@ def convert_data_to_lerobot(data_path: Path, repo_id: str, *, push_to_hub: bool 
     # is never written and the resulting dataset may not load at all.
     dataset.finalize()
 
+    # Camera intrinsics are strongly encouraged for RGB endoscopy. See
+    # write_camera_intrinsics() in hdf5_to_lerobot.py for the pattern.
+
     print(f"Dataset conversion complete. Saved to {final_output_path}")
 
     if push_to_hub:

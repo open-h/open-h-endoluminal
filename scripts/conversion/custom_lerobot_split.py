@@ -178,6 +178,11 @@ def main(
     # this the footer metadata is never written and the dataset may not load.
     dataset.finalize()
 
+    # Camera intrinsics are strongly encouraged for RGB endoscopy. They are
+    # static, so write them once to meta/calibration/camera_intrinsics.json
+    # after finalize() rather than as a per-frame feature; see
+    # write_camera_intrinsics() in hdf5_to_lerobot.py for the pattern.
+
     # --------------------------------------
     # 5. Write custom splits into info.json
     # --------------------------------------

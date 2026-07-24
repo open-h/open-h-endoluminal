@@ -107,6 +107,7 @@ For successful data integration and analysis, please ensure the following requir
 * **Synchronization Guarantees**: Provide clear documentation regarding the synchronization method and sample rates used for your dataset. Include this documentation in your dataset README.
 * **Timestamps (per-stream, lossless)**: LeRobot's canonical per-frame `timestamp` column is the frame timeline. The library always writes `frame_index / fps` and does not accept explicit per-frame values. To preserve your ground-truth capture clocks losslessly, additionally store them as pass-through features (int64, Unix-epoch nanoseconds, one per frame): the reference video stream's clock as `observation.meta.host_stamp_ns`, and, when other streams were captured at their own native rate and resampled onto the frame timeline, each of those streams' raw clock as `observation.meta.<stream>_stamp_ns` (e.g., `observation.meta.kinematics_stamp_ns`, `observation.meta.tracker_stamp_ns`). This keeps the pre-resampling timing of every stream auditable, so downstream users can measure per-frame staleness or re-derive the alignment. Document the timelines in your dataset README. See [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py) for the reference pattern.
 * **Camera-Frame Kinematics (RGB endoscopy)**: if your primary video stream is RGB endoscopic video, make a best effort to also provide your kinematics as camera-frame motion under `observation.meta.camera_frame_delta_pose`. See [Camera-Frame Kinematics for RGB Endoscopy](#camera-frame-kinematics-for-rgb-endoscopy).
+* **Camera Intrinsics (RGB endoscopy)**: include your camera intrinsics as a calibration file at `meta/calibration/camera_intrinsics.json`. Strongly encouraged for RGB endoscopy (required for depth, 3D reconstruction, and SLAM). See [Camera Intrinsics](#camera-intrinsics).
 
 ## Additional Fields
 
@@ -174,6 +175,27 @@ How to derive it depends on your signal tier:
 * **S3 (inferred pose)**: monocular or stereo SLAM / visual odometry already estimates camera ego-motion; report it directly. If the estimate is monocular and up-to-scale rather than metric, state that clearly in your dataset README.
 
 Include the supporting calibration in your dataset and document the derivation method in your dataset README (the [dataset template](templates/dataset_template.md) has a dedicated section). If providing this representation is genuinely infeasible for your platform, explain why in your dataset README. A reference implementation, `absolute_poses_to_camera_frame_deltas()`, is provided in [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py). Fluoroscopy-only submissions (for example endovascular intervention) are exempt.
+
+#### Camera Intrinsics
+
+Including your camera intrinsics is strongly encouraged for RGB endoscopy: they are required for the depth estimation, 3D reconstruction, and SLAM capabilities the initiative targets.
+
+Store intrinsics as a calibration file at **`meta/calibration/camera_intrinsics.json`**. Key the file by camera feature name so a multi-camera rig records each stream:
+
+```json
+{
+  "observation.images.endoscope": {
+    "model": "pinhole",
+    "width": 640,
+    "height": 480,
+    "fx": 512.3, "fy": 512.8, "cx": 319.6, "cy": 240.2,
+    "distortion_model": "opencv_radtan",
+    "distortion_coeffs": [0.0, 0.0, 0.0, 0.0, 0.0]
+  }
+}
+```
+
+`fx`, `fy`, `cx`, `cy` are the OpenCV pinhole parameters in pixels; `distortion_model` names the model (for example `opencv_radtan` with coefficients `[k1, k2, p1, p2, k3]`, or `none` with an empty list for already-undistorted frames). A reference writer, `write_camera_intrinsics()`, is provided in [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py); call it after `dataset.finalize()`. If your intrinsics genuinely vary per frame (an optical or digital zoom).
 
 #### Flexible-Endoscope Robot Example
 

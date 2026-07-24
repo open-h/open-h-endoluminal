@@ -277,10 +277,11 @@ observation.meta.em_pose: [tip_x, tip_y, tip_z, tip_qx, tip_qy, tip_qz, tip_qw]
 
 ### Calibration & Kinematic Descriptions (REQUIRED where a robot is involved)
 
-- [ ] **Calibration data provided** (e.g., camera intrinsics and extrinsics, EM-to-camera or hand-eye transforms)
+- [ ] **Camera intrinsics provided** (as `meta/calibration/camera_intrinsics.json`, keyed by camera feature name; strongly encouraged for RGB endoscopy)
+- [ ] **Other calibration data provided** (e.g., camera extrinsics, EM-to-camera or hand-eye transforms)
 - [ ] **CAD / kinematic-tree description provided** (USD, URDF, DH parameters, or equivalent for the scope, catheter, or robot)
 
-*Describe what is included and where it lives in the dataset:* `[e.g., meta/calibration/ contains camera intrinsics and the EM-to-camera transform; a URDF of the actuation unit is included]`
+*Describe what is included and where it lives in the dataset:* `[e.g., meta/calibration/camera_intrinsics.json holds the endoscope pinhole intrinsics and meta/calibration/hand_eye.json the tip-to-camera transform; a URDF of the actuation unit is included]`
 
 ---
 
