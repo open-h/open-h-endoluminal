@@ -1,15 +1,15 @@
-<div align="center">
 
-<img src="assets/open_h_endoluminal_header.png" alt="Open-H-Endoluminal: endoluminal and interventional robotic platforms, including a robotic endoscope navigating a lumen, a catheter under fluoroscopy, a flexible endoscope, and a scope-tip snare tool" width="100%">
+
+
 
 # Open-H-Endoluminal: Data Contribution How-To Guide
 
-[![Website](https://img.shields.io/badge/Open--H-Website-0A66C2?style=for-the-badge&logo=googlechrome&logoColor=white)](https://www.open-h.org/)
-[![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/dWxQqdxps)
-[![LeRobot](https://img.shields.io/badge/LeRobot-dataset%20v3.0-FF6B6B?style=for-the-badge)](https://huggingface.co/docs/lerobot)
-[![License](https://img.shields.io/badge/License-CC%20BY%204.0-4CAF50?style=for-the-badge)](https://creativecommons.org/licenses/by/4.0/)
+[Website](https://www.open-h.org/)
+[Discord](https://discord.gg/dWxQqdxps)
+[LeRobot](https://huggingface.co/docs/lerobot)
+[License](https://creativecommons.org/licenses/by/4.0/)
 
-</div>
+
 
 **Open-H-Endoluminal** is an open, multi-institution dataset initiative for endoscopic, endoluminal, and interventional robotics: the flexible GI scopes, bronchoscopes, ureteroscopes, capsules, continuum and soft robots, and vascular catheters that navigate the body's natural lumens and vasculature. The goal is to create the first large-scale open dataset focused on endoluminal and interventional robotics.
 
@@ -22,33 +22,38 @@ Open-H-Endoluminal grows out of [Open-H-Embodiment](https://github.com/open-h/op
 Visit the [Open-H website](https://www.open-h.org/) for a general overview of the initiative.
 
 1. **Review the Request for Proposals**
-   Read the [Open-H-Endoluminal RFP](assets/open-h-endoluminal-rfp.pdf) to confirm your proposed dataset aligns with the initiative. The RFP outlines the technical scope, eligibility, per-setting hour minimums, and proposal requirements for submissions reviewed by the steering group.
-
+  Read the [Open-H-Endoluminal RFP](assets/open-h-endoluminal-rfp.pdf) to confirm your proposed dataset aligns with the initiative. The RFP outlines the technical scope, eligibility, per-setting hour minimums, and proposal requirements for submissions reviewed by the steering group.
 2. **Complete the Onboarding Form**
-   Develop your proposal describing the dataset, collection methodology, and specific tasks, following the instructions in the RFP. Submit it through the [collaborator onboarding form](https://docs.google.com/forms/d/e/1FAIpQLSdjVhTu7Nfcz5sINvJWlDVcp2xFr4JIRKq6iov0jDyOj2BEIg/viewform?usp=header) to be considered as a collaborator in the effort.
+  Develop your proposal describing the dataset, collection methodology, and specific tasks, following the instructions in the RFP. Submit it through the [collaborator onboarding form](https://docs.google.com/forms/d/e/1FAIpQLSdjVhTu7Nfcz5sINvJWlDVcp2xFr4JIRKq6iov0jDyOj2BEIg/viewform?usp=header) to be considered as a collaborator in the effort.
 
 Once your proposal is approved, the Open-H team will reach out with the next steps to onboard you as a collaborator.
 
 ## Scope at a Glance
 
+
+
 ### Domains
 
 Data is accepted broadly across the entire endoluminal scope, and contributions are welcome in every listed domain:
 
-* **Lower and upper GI endoscopy**: navigation and intubation; example tasks also cover screening/coverage, detection/diagnosis, and intervention such as biopsy and polypectomy.
-* **Bronchoscopy**: navigation to airway targets, transbronchial biopsy.
-* **Endovascular and catheter-based intervention**: navigation and interventional tasks across robotic endovascular and catheter-based procedures (for example thrombectomy, stenting, angioplasty, cardiac ablation). Visualization is fluoroscopic rather than endoscopic; fluoroscopy-based dataset proposals are considered case-by-case (see the RFP).
-* **Ureteroscopy and transurethral**: navigation and diagnostic or interventional tasks in the urinary tract.
-* **Wireless and untethered endoluminal systems**: active locomotion, magnetic actuation, and navigation for capsule endoscopes and untethered robots in lumens not served by tethered platforms.
+- **Lower and upper GI endoscopy**: navigation and intubation; example tasks also cover screening/coverage, detection/diagnosis, and intervention such as biopsy and polypectomy.
+- **Bronchoscopy**: navigation to airway targets, transbronchial biopsy.
+- **Endovascular and catheter-based intervention**: navigation and interventional tasks across robotic endovascular and catheter-based procedures (for example thrombectomy, stenting, angioplasty, cardiac ablation). Visualization is fluoroscopic rather than endoscopic; fluoroscopy-based dataset proposals are considered case-by-case (see the RFP).
+- **Ureteroscopy and transurethral**: navigation and diagnostic or interventional tasks in the urinary tract.
+- **Wireless and untethered endoluminal systems**: active locomotion, magnetic actuation, and navigation for capsule endoscopes and untethered robots in lumens not served by tethered platforms.
+
+
 
 ### Tasks
 
 Every submission must state its task intent and the target. Some example tasks are:
 
-* **Navigation**: movement toward a stated target, never unlabeled wandering.
-* **Screening / coverage**: systematic inspection of a lumen or region.
-* **Detection / diagnosis**: identifying and characterizing findings.
-* **Intervention**: acting on a target (e.g., biopsy, polypectomy, clot removal).
+- **Navigation**: movement toward a stated target, never unlabeled wandering.
+- **Screening / coverage**: systematic inspection of a lumen or region.
+- **Detection / diagnosis**: identifying and characterizing findings.
+- **Intervention**: acting on a target (e.g., biopsy, polypectomy, clot removal).
+
+
 
 ### Out of Scope
 
@@ -66,6 +71,8 @@ Before using the conversion scripts and following this dataset preparation guide
 pip install "lerobot[dataset]==0.6.0"
 ```
 
+
+
 ### Version Clarification
 
 - **LeRobot Package Version**: 0.6.0 (the Python library)
@@ -77,14 +84,16 @@ pip install "lerobot[dataset]==0.6.0"
 
 To maintain uniformity and compatibility within the project, all data should adhere to the LeRobot dataset v3.0 format.
 
-| Aspect | Guideline |
-| :---- | :---- |
-| **Hz (Suggested)** | >= 20 Hz |
-| **Resolution (Suggested)** | >= 480p |
-| **Video Encoding** | MP4 |
-| **Synchronization Tolerance** | Recorded via `tolerance_s` (typical 0.1 s) |
-| **Label Granularity (Suggested)** | Task-level |
-| **Storage Format** | [LeRobot dataset format](https://huggingface.co/docs/lerobot) (v3.0) |
+
+| Aspect                            | Guideline                                                            |
+| --------------------------------- | -------------------------------------------------------------------- |
+| **Hz (Suggested)**                | >= 20 Hz                                                             |
+| **Resolution (Suggested)**        | >= 480p                                                              |
+| **Video Encoding**                | MP4                                                                  |
+| **Synchronization Tolerance**     | Recorded via `tolerance_s` (typical 0.1 s)                           |
+| **Label Granularity (Suggested)** | Task-level                                                           |
+| **Storage Format**                | [LeRobot dataset format](https://huggingface.co/docs/lerobot) (v3.0) |
+
 
 A v3.0 dataset has the following layout:
 
@@ -97,19 +106,23 @@ data/chunk-*/file-*.parquet             # multiple episodes aggregated per parqu
 videos/<camera_key>/chunk-*/file-*.mp4
 ```
 
-*Note: the v2.1 files `episodes.jsonl`, `episodes_stats.jsonl`, `tasks.jsonl`, and `data/chunk-*/episode_*.parquet` no longer exist in v3.0.*
+*Note: the v2.1 files* `episodes.jsonl`*,* `episodes_stats.jsonl`*,* `tasks.jsonl`*, and* `data/chunk-*/episode_*.parquet` *no longer exist in v3.0.*
 
 ## Data Requirements
 
 For successful data integration and analysis, please ensure the following requirements are met:
 
-* **README.md**: Complete the [dataset template](templates/dataset_template.md) and include it as `README.md` inside your dataset's `meta/` directory.
-* **Synchronization Guarantees**: Provide clear documentation regarding the synchronization method and sample rates used for your dataset. Include this documentation in your dataset README.
-* **Timestamps (per-stream, lossless)**: LeRobot's canonical per-frame `timestamp` column is the frame timeline. The library always writes `frame_index / fps` and does not accept explicit per-frame values. To preserve your ground-truth capture clocks losslessly, additionally store them as pass-through features (int64, Unix-epoch nanoseconds, one per frame): the reference video stream's clock as `observation.meta.host_stamp_ns`, and, when other streams were captured at their own native rate and resampled onto the frame timeline, each of those streams' raw clock as `observation.meta.<stream>_stamp_ns` (e.g., `observation.meta.kinematics_stamp_ns`, `observation.meta.tracker_stamp_ns`). This keeps the pre-resampling timing of every stream auditable, so downstream users can measure per-frame staleness or re-derive the alignment. Document the timelines in your dataset README. See [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py) for the reference pattern.
-* **Camera-Frame Kinematics (RGB endoscopy)**: if your primary video stream is RGB endoscopic video, make a best effort to also provide your kinematics as camera-frame motion under `observation.meta.camera_frame_delta_pose`. See [Camera-Frame Kinematics for RGB Endoscopy](#camera-frame-kinematics-for-rgb-endoscopy).
-* **Camera Intrinsics (RGB endoscopy)**: include your camera intrinsics as a calibration file at `meta/calibration/camera_intrinsics.json`. Strongly encouraged for RGB endoscopy (required for depth, 3D reconstruction, and SLAM). See [Camera Intrinsics](#camera-intrinsics).
+- **README.md**: Complete the [dataset template](templates/dataset_template.md) and include it as `README.md` inside your dataset's `meta/` directory.
+- **Synchronization Guarantees**: Provide clear documentation regarding the synchronization method and sample rates used for your dataset. Include this documentation in your dataset README.
+- **Timestamps (per-stream, lossless)**: LeRobot's canonical per-frame `timestamp` column is the frame timeline. The library always writes `frame_index / fps` and does not accept explicit per-frame values. To preserve your ground-truth capture clocks losslessly, additionally store them as pass-through features (int64, Unix-epoch nanoseconds, one per frame): the reference video stream's clock as `observation.meta.host_stamp_ns`, and, when other streams were captured at their own native rate and resampled onto the frame timeline, each of those streams' raw clock as `observation.meta.<stream>_stamp_ns` (e.g., `observation.meta.kinematics_stamp_ns`, `observation.meta.tracker_stamp_ns`). This keeps the pre-resampling timing of every stream auditable, so downstream users can measure per-frame staleness or re-derive the alignment. Document the timelines in your dataset README. See [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py) for the reference pattern.
+- **Camera-Frame Kinematics (RGB endoscopy)**: if your primary video stream is RGB endoscopic video, make a best effort to also provide your kinematics as camera-frame motion under `observation.meta.camera_frame_delta_pose`. See [Camera-Frame Kinematics for RGB Endoscopy](#camera-frame-kinematics-for-rgb-endoscopy).
+- **Camera Intrinsics (RGB endoscopy)**: include your camera intrinsics as a calibration file at `meta/calibration/camera_intrinsics.json`. Strongly encouraged for RGB endoscopy (required for depth, 3D reconstruction, and SLAM). See [Camera Intrinsics](#camera-intrinsics).
+
+
 
 ## Additional Fields
+
+
 
 ### Splits
 
@@ -154,25 +167,25 @@ In a LeRobot dataset for endoluminal robotics, store any additional domain-speci
 
 To maintain consistency with core LeRobot functionality, the following features **should** be included in your dataset:
 
-* **action**: The action to be executed
-* **observation.state**: The primary proprioception describing the state of the robot/endoscope — native kinematics where the platform provides them (e.g., insertion depth, shaft rotation, tip bends), or the tracked tip pose on platforms where that is the only proprioceptive signal. Any additional pose stream beyond the primary state belongs under `observation.meta.<field>` (e.g., `observation.meta.em_pose`), not concatenated into `observation.state`.
-* **observation.images.\<view\>**: The video frame(s) from a provided view (e.g., `observation.images.endoscope`, `observation.images.fluoro`)
+- **action**: The action to be executed
+- **observation.state**: The primary proprioception describing the state of the robot/endoscope — native kinematics where the platform provides them (e.g., insertion depth, shaft rotation, tip bends), or the tracked tip pose on platforms where that is the only proprioceptive signal. Any additional pose stream beyond the primary state belongs under `observation.meta.<field>` (e.g., `observation.meta.em_pose`), not concatenated into `observation.state`.
+- **observation.images.view**: The video frame(s) from a provided view (e.g., `observation.images.endoscope`, `observation.images.fluoro`)
 
-*Note: the observation.state and observation.images.\<view\> naming convention is important to follow due to upstream LeRobot tools, like the data visualization module.*
+*Note: the observation.state and observation.images.view naming convention is important to follow due to upstream LeRobot tools, like the data visualization module.*
 
-To accommodate additional endoluminal-specific data that is helpful to downstream developers, we encourage collaborators to use the **observation.meta.\<field\>** naming convention. Example usage is below:
+To accommodate additional endoluminal-specific data that is helpful to downstream developers, we encourage collaborators to use the **observation.meta.field** naming convention. Example usage is below:
 
 #### Camera-Frame Kinematics for RGB Endoscopy
 
 If your primary video stream is RGB endoscopic video, you **must make a best effort** to also provide kinematics in the reference frame of your endoscope camera. This is requested to best support multi-embodiment task transfer between embodiments that may have very different native kinematics (e.g. proprietary cable-driven actuator values).
 
-* **observation.meta.camera_frame_delta_pose**: `[dx_m, dy_m, dz_m, dqx, dqy, dqz, dqw]`, the relative pose of the camera from the previous frame to the current frame, expressed in the previous frame's optical coordinates (OpenCV convention: +x right, +y down, +z along the optical axis). The first frame of each episode is the identity transform `[0, 0, 0, 0, 0, 0, 1]`.
+- **observation.meta.camera_frame_delta_pose**: `[dx_m, dy_m, dz_m, dqx, dqy, dqz, dqw]`, the relative pose of the camera from the previous frame to the current frame, expressed in the previous frame's optical coordinates (OpenCV convention: +x right, +y down, +z along the optical axis). The first frame of each episode is the identity transform `[0, 0, 0, 0, 0, 0, 1]`.
 
 How to derive it depends on your signal tier:
 
-* **S1 (native kinematics)**: forward kinematics of the scope tip plus a tip-to-camera (hand-eye) calibration.
-* **S2 (tracked pose)**: the EM or shape-sensing tip pose plus a sensor-to-camera calibration.
-* **S3 (inferred pose)**: monocular or stereo SLAM / visual odometry already estimates camera ego-motion; report it directly. If the estimate is monocular and up-to-scale rather than metric, state that clearly in your dataset README.
+- **S1 (native kinematics)**: forward kinematics of the scope tip plus a tip-to-camera (hand-eye) calibration.
+- **S2 (tracked pose)**: the EM or shape-sensing tip pose plus a sensor-to-camera calibration.
+- **S3 (inferred pose)**: monocular or stereo SLAM / visual odometry already estimates camera ego-motion; report it directly. If the estimate is monocular and up-to-scale rather than metric, state that clearly in your dataset README.
 
 Include the supporting calibration in your dataset and document the derivation method in your dataset README (the [dataset template](templates/dataset_template.md) has a dedicated section). If providing this representation is genuinely infeasible for your platform, explain why in your dataset README. A reference implementation, `absolute_poses_to_camera_frame_deltas()`, is provided in [hdf5_to_lerobot.py](scripts/conversion/hdf5_to_lerobot.py). Fluoroscopy-only submissions (for example endovascular intervention) are exempt.
 
@@ -180,7 +193,7 @@ Include the supporting calibration in your dataset and document the derivation m
 
 Including your camera intrinsics is strongly encouraged for RGB endoscopy: they are required for the depth estimation, 3D reconstruction, and SLAM capabilities the initiative targets.
 
-Store intrinsics as a calibration file at **`meta/calibration/camera_intrinsics.json`**. Key the file by camera feature name so a multi-camera rig records each stream:
+Store intrinsics as a calibration file at `meta/calibration/camera_intrinsics.json`. Key the file by camera feature name so a multi-camera rig records each stream:
 
 ```json
 {
@@ -288,6 +301,8 @@ endoscope_dataset = LeRobotDataset.create(
 )
 ```
 
+
+
 #### Endovascular Catheter Example
 
 ```python
@@ -350,12 +365,14 @@ Following these best practices will help ensure the highest quality of contribut
 
 During data collection, it is advised to diversify as many of the following dimensions as possible:
 
-* **Scope or Catheter Model** (if multiple devices are available)
-* **Phantom or Anatomy Model** (e.g., different colon phantoms, airway trees, vascular geometries)
-* **Insufflation and Lighting** (varying insufflation levels and illumination settings)
-* **Route or Target** (e.g., different airway targets, vascular branches, colonic segments)
-* **Operator Technique and Skill** (different techniques for the same task; expert, intermediate, and novice operators)
-* **Site** (multiple labs or institutions collecting with a comparable setup)
+- **Scope or Catheter Model** (if multiple devices are available)
+- **Phantom or Anatomy Model** (e.g., different colon phantoms, airway trees, vascular geometries)
+- **Insufflation and Lighting** (varying insufflation levels and illumination settings)
+- **Route or Target** (e.g., different airway targets, vascular branches, colonic segments)
+- **Operator Technique and Skill** (different techniques for the same task; expert, intermediate, and novice operators)
+- **Site** (multiple labs or institutions collecting with a comparable setup)
+
+
 
 ### Recovery Examples
 
@@ -398,6 +415,8 @@ Once the time offset between the streams is estimated, you have two options to a
 
 - **Real-time correction**: Adjust timestamps of the data streams and publish new ROS topics with corrected timing. Then, these synchronized topics can be recorded during the demonstration.
 - **Post-processing correction**: Apply the synchronization offline, during data processing, by aligning timestamps based on the estimated offset (see below).
+
+
 
 ### Post-Processing for Time Synchronization
 
@@ -452,17 +471,23 @@ This repository ships agent skills and instructions so AI coding agents can help
 - [.claude/skills/dataset-conversion](.claude/skills/dataset-conversion/SKILL.md): guides an agent through converting an existing dataset to the LeRobot v3.0 format using the scripts in this repo.
 - [AGENTS.md](AGENTS.md): repository-level instructions for AI coding agents.
 
+
+
 ## Timeline
 
-| Milestone | Date |
-| :---- | :---- |
-| RFP released | July 2026 |
-| Proposal submission deadline | September 2026 |
-| Data collection window | September 2026 to January 2027 |
-| Data sample deadline | December 1, 2026 |
-| Data cleanup and standardization | January 2027 |
-| Model training and validation | February 2027 |
-| Public release of dataset and models | March 2027 at NVIDIA GTC |
+
+| Milestone                            | Date                           |
+| ------------------------------------ | ------------------------------ |
+| RFP released                         | July 2026                      |
+| Proposal submission deadline         | September 2026                 |
+| Data collection window               | September 2026 to January 2027 |
+| Data sample deadline                 | December 1, 2026               |
+| Data cleanup and standardization     | January 2027                   |
+| Model training and validation        | February 2027                  |
+| Public release of dataset and models | March 2027 at NVIDIA GTC       |
+
+
+
 
 ## Additional Resources
 
@@ -473,14 +498,16 @@ This repository ships agent skills and instructions so AI coding agents can help
 - [Synchronization Scripts](scripts/synchronization/)
 - [Open-H-Embodiment (predecessor initiative)](https://github.com/open-h/open-h-embodiment)
 
+
+
 ## Contributing & Get Help
 
 We welcome contributions from the community! Please ensure your data follows the guidelines outlined in this document and includes proper documentation using our [dataset template](templates/dataset_template.md).
 
-- **Join our Discord**: [discord.gg/dWxQqdxps](https://discord.gg/dWxQqdxps) (shared Open-H community): connect with other contributors, ask questions, and share your progress
+- **Join our Discord**: [discord.gg/dWxQqdxps](https://discord.gg/dWxQqdxps): Connect with other contributors, ask questions, and share your progress
 - **Report Issues**: Open an issue in this repository for bugs or feature requests
-- **Technical questions**: Nigel Nelson, nigeln@nvidia.com (NVIDIA); Siddhartha Kapuria, skapuria@utexas.edu (UT Austin)
-- **Administrative questions**: Sean Huver, shuver@nvidia.com
+- **Technical questions**: Nigel Nelson, [nigeln@nvidia.com](mailto:nigeln@nvidia.com) (NVIDIA); Siddhartha Kapuria, [skapuria@utexas.edu](mailto:skapuria@utexas.edu) (UT Austin)
+- **Administrative questions**: Sean Huver, [shuver@nvidia.com](mailto:shuver@nvidia.com)
 
 ---
 
