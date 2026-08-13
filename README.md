@@ -5,7 +5,7 @@
 # Open-H-Endoluminal: Data Contribution How-To Guide
 
 [Website](https://www.open-h.org/)
-[Discord](https://discord.gg/dWxQqdxps)
+[Discord](https://discord.gg/jNqUd4uX6)
 [LeRobot](https://huggingface.co/docs/lerobot)
 [License](https://creativecommons.org/licenses/by/4.0/)
 
@@ -504,7 +504,7 @@ This repository ships agent skills and instructions so AI coding agents can help
 
 We welcome contributions from the community! Please ensure your data follows the guidelines outlined in this document and includes proper documentation using our [dataset template](templates/dataset_template.md).
 
-- **Join our Discord**: [discord.gg/dWxQqdxps](https://discord.gg/dWxQqdxps): Connect with other contributors, ask questions, and share your progress
+- **Join our Discord**: [https://discord.gg/jNqUd4uX6](https://discord.gg/jNqUd4uX6): Connect with other contributors, ask questions, and share your progress
 - **Report Issues**: Open an issue in this repository for bugs or feature requests
 - **Technical questions**: Nigel Nelson, [nigeln@nvidia.com](mailto:nigeln@nvidia.com) (NVIDIA); Siddhartha Kapuria, [skapuria@utexas.edu](mailto:skapuria@utexas.edu) (UT Austin)
 - **Administrative questions**: Sean Huver, [shuver@nvidia.com](mailto:shuver@nvidia.com)
