@@ -7,7 +7,7 @@
 [Website](https://www.open-h.org/)
 [Discord](https://discord.gg/jNqUd4uX6)
 [LeRobot](https://huggingface.co/docs/lerobot)
-[License](https://creativecommons.org/licenses/by/4.0/)
+[License](https://github.com/OpenMDW/OpenMDW/blob/main/1.1/LICENSE.OpenMDW-1.1)
 
 
 

@@ -30,7 +30,7 @@ details of your contribution.
 | **Episodes** | `[Number]` |
 | **Frames** | `[Number]` |
 | **Dataset Format** | LeRobot dataset format v3.0 |
-| **License** (REQUIRED) | CC BY 4.0 *(default; state and justify any deviation)* |
+| **License** (REQUIRED) | OpenMDW-1.1 *(default; state and justify any deviation)* |
 | **De-identification Status** (REQUIRED) | `[e.g., De-identified to HIPAA Safe Harbor / GDPR-equivalent / N/A (no human-subject data)]` |
 | **Version** | `[e.g., 1.0]` |
 
