@@ -479,7 +479,7 @@ This repository ships agent skills and instructions so AI coding agents can help
 | Milestone                            | Date                           |
 | ------------------------------------ | ------------------------------ |
 | RFP released                         | July 2026                      |
-| Proposal submission deadline         | September 2026                 |
+| Proposal submission deadline         | September 30, 2026             |
 | Data collection window               | September 2026 to January 2027 |
 | Data sample deadline                 | December 1, 2026               |
 | Data cleanup and standardization     | January 2027                   |
